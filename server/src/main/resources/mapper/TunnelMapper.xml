@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.p00q.u2ps.mapper.TunnelMapper">
+  <resultMap id="BaseResultMap" type="cn.p00q.u2ps.entity.Tunnel">
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="node_id" jdbcType="INTEGER" property="nodeId" />
+    <result column="target_ip" jdbcType="VARCHAR" property="targetIp" />
+    <result column="target_port" jdbcType="INTEGER" property="targetPort" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="client_id" jdbcType="INTEGER" property="clientId" />
+    <result column="service_port" jdbcType="INTEGER" property="servicePort" />
+    <result column="type" jdbcType="INTEGER" property="type" />
+    <result column="bandwidth" jdbcType="INTEGER" property="bandwidth" />
+    <result column="open" jdbcType="BIT" property="open" />
+    <result column="creation_time" jdbcType="TIMESTAMP" property="creationTime" />
+  </resultMap>
+</mapper>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--suppress ALL-->
+<html lang="zh-CN" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>U2PS内网穿透 | 登录</title>
+  <!-- 告诉浏览器屏幕自适应 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Font Awesome -->
+  <link href="https://cdn.staticfile.org/font-awesome/5.14.0/css/all.css" rel="stylesheet">
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="https://cdn.staticfile.org/ionicons/5.1.2/collection/components/icon/icon.min.css">
+  <!-- icheck bootstrap -->
+  <link href="https://cdn.staticfile.org/icheck-bootstrap/2.0.3/icheck-bootstrap.min.css" rel="stylesheet">
+  <!-- 主题样式 -->
+  <link href="https://cdn.staticfile.org/admin-lte/3.0.5/css/adminlte.min.css" rel="stylesheet">
+  <!-- 离线 Google 字体: Source Sans Pro -->
+  <link href="css/google.css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+</head>
+<body class="hold-transition login-page">
+<div class="login-box">
+  <div class="login-logo">
+    <a href="/"><b>U2PS</b>内网穿透</a>
+  </div>
+  <div class="card">
+    <div class="card-body login-card-body">
+      <p class="login-box-msg">账号登录</p>
+      <p class="login-box-msg" th:text="${Msg}"></p>
+      <form method="post" id="login">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="用户名" name="username">
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-user"></span>
+            </div>
+          </div>
+        </div>
+        <div class="input-group mb-3">
+          <input type="password" class="form-control" placeholder="密码" name="password">
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-lock"></span>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-8">
+            <div class="icheck-primary">
+              <input type="checkbox" id="remember" name="remember">
+              <label for="remember">
+                记住我
+              </label>
+            </div>
+          </div>
+          <!-- /.col -->
+          <div class="col-4">
+            <button type="submit" class="btn btn-primary btn-block">登录</button>
+          </div>
+          <!-- /.col -->
+        </div>
+      </form>
+
+      <!-- /.social-auth-links -->
+
+      <p class="mb-1">
+        <a href="/forgotPassword">找回、修改密码</a>
+      </p>
+      <p class="mb-0">
+        <a href="/reg" class="text-center">注册账号</a>
+      </p>
+    </div>
+    <!-- /.login-card-body -->
+  </div>
+</div>
+<!-- /.login-box -->
+
+<!-- jQuery -->
+<script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE App -->
+<script src="./js/adminlte.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-validate/1.19.2/jquery.validate.min.js"></script>
+
+<script>
+$("#login").validate({
+  rules:{
+    username:{required:true,minlength:3,maxlength:16},
+    password:{required:true,minlength:6,maxlength:16}
+  },
+  messages:{
+    username:{required:"必须填写",minlength:"最少3个字符",maxlength:"最多16个字符"},
+    password:{required:"必须填写",minlength:"最少6个字符",maxlength:"最多16个字符"}
+  }
+})
+</script>
+</body>
+</html>

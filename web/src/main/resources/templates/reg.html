@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!--suppress ALL-->
+<html lang="zh-CN" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>U2PS内网穿透 | 注册页面</title>
+  <!-- 告诉浏览器屏幕自适应 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Font Awesome -->
+  <link href="https://cdn.staticfile.org/font-awesome/5.14.0/css/all.css" rel="stylesheet">
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="https://cdn.staticfile.org/ionicons/5.1.2/collection/components/icon/icon.min.css">
+  <!-- icheck bootstrap -->
+  <link href="https://cdn.staticfile.org/icheck-bootstrap/2.0.3/icheck-bootstrap.min.css" rel="stylesheet">
+  <!-- 主题样式 -->
+  <link href="https://cdn.staticfile.org/admin-lte/3.0.5/css/adminlte.min.css" rel="stylesheet">
+  <!-- 离线 Google 字体: Source Sans Pro -->
+  <link href="css/google.css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+</head>
+<body class="hold-transition register-page">
+<div class="register-box">
+  <div class="register-logo">
+    <a href="/"><b>U2PS</b>内网穿透</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body register-card-body">
+      <p class="login-box-msg">注册新用户</p>
+      <p class="login-box-msg" th:text="${Msg}"></p>
+      <form method="post" id="reg">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="用户名" name="username">
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-user"></span>
+            </div>
+          </div>
+        </div>
+        <div class="input-group mb-3">
+          <input type="email" class="form-control" placeholder="邮箱" name="email">
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-envelope"></span>
+            </div>
+          </div>
+        </div>
+        <div class="input-group mb-3">
+          <input type="password" class="form-control" placeholder="密码" id="password" name="password">
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-lock"></span>
+            </div>
+          </div>
+        </div>
+        <div class="input-group mb-3">
+          <input type="password" class="form-control" placeholder="再次输入密码" name="rPassword">
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-lock"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 点击式按钮建议高度介于36px与46px  -->
+        <div id="vaptchaContainer" style="width: 300px;height: 36px;">
+          <!--vaptcha-container是用来引入VAPTCHA的容器，下面代码为预加载动画，仅供参考-->
+          <div class="vaptcha-init-main">
+            <div class="vaptcha-init-loading">
+              <a href="/" target="_blank">
+                <img src="https://r.vaptcha.net/public/img/vaptcha-loading.gif" />
+              </a>
+              <span class="vaptcha-text">Vaptcha启动中...</span>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <!-- /.col -->
+          <button type="submit" class="btn btn-primary btn-block">注册</button>
+          <a href="login" class="text-center">我已经有账号了</a>
+          <!-- /.col -->
+        </div>
+      </form>
+
+    </div>
+    <!-- /.form-box -->
+  </div><!-- /.card -->
+</div>
+<!-- /.register-box -->
+
+<!-- jQuery -->
+<script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE App -->
+<script src="./js/adminlte.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-validate/1.19.2/jquery.validate.min.js"></script>
+<script src="https://v.vaptcha.com/v3.js"></script>
+<style>
+  .vaptcha-init-main {
+    display: table;
+    width: 100%;
+    height: 100%;
+    background-color: #eeeeee;
+  }
+  ​
+  .vaptcha-init-loading {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+  }
+  ​
+  .vaptcha-init-loading > a {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: none;
+  }
+  ​
+  .vaptcha-init-loading > a img {
+    vertical-align: middle;
+  }
+  ​
+  .vaptcha-init-loading .vaptcha-text {
+    font-family: sans-serif;
+    font-size: 12px;
+    color: #cccccc;
+    vertical-align: middle;
+  }
+</style>
+<script>
+  $("#reg").validate({
+    rules:{
+      username:{required:true,minlength:3,maxlength:16},
+      password:{required:true,minlength:6,maxlength:16},
+      email: {required: true, email: true},
+      rPassword:{required: true,equalTo: "#password" }
+    },
+    messages:{
+      username:{required:"必须填写",minlength:"最少3个字符",maxlength:"最多16个字符"},
+      password:{required:"必须填写",minlength:"最少6个字符",maxlength:"最多16个字符"},
+      rPassword:{equalTo:"密码不一致"},
+      email:"请输入正确的邮箱"
+    }
+  })
+  vaptcha({
+    vid: "5f33dfe11273afe27016d595", // 验证单元id
+    type: "click", // 显示类型 点击式
+    scene: 0, // 场景值 默认0
+    container: "#vaptchaContainer", // 容器，可为Element 或者 selector
+    offline_server: "127.0.0.1.2252", //离线模式服务端地址，若尚未配置离线模式，请填写任意地址即可。
+    //可选参数
+    //lang: 'auto', // 语言 默认auto,可选值auto,zh-CN,en,zh-TW,jp
+    //https: true, // 使用https 默认 true
+    //style: 'dark' //按钮样式 默认dark，可选值 dark,light
+    //color: '#57ABFF' //按钮颜色 默认值#57ABFF
+  }).then(function (vaptchaObj) {
+    obj = vaptchaObj; //将VAPTCHA验证实例保存到局部变量中
+    vaptchaObj.render(); // 调用验证实例 vpObj 的 render 方法加载验证按钮
+    //获取token的方式一：
+    vaptchaObj.renderTokenInput('#reg')//以form的方式提交数据时，使用此函数向表单添加token值
+    //关闭验证弹窗时触发
+    vaptchaObj.listen("close", function () {
+      //验证弹窗关闭触发
+    });
+  });
+</script>
+</body>
+</html>

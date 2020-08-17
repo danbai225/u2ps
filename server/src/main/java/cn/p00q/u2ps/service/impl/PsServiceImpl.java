@@ -8,6 +8,7 @@ import cn.p00q.u2ps.entity.Node;
 import cn.p00q.u2ps.entity.Tunnel;
 import cn.p00q.u2ps.entity.User;
 import cn.p00q.u2ps.service.*;
+import cn.p00q.u2ps.utils.DateUtils;
 import cn.p00q.u2ps.utils.IpUtils;
 import cn.p00q.u2ps.utils.MapUtil;
 import com.alibaba.fastjson.JSON;
@@ -17,13 +18,13 @@ import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @program: server
@@ -37,14 +38,17 @@ import java.util.concurrent.TimeUnit;
 public class PsServiceImpl implements PsService {
     private static Integer AskNodeNum;
     private static Integer AskNodeInterval;
+    private static Flow CacheFlowCount = new Flow(0L, 0L);
+    private static Flow CacheFlowToday = new Flow(0L, 0L);
     private static ConcurrentHashMap<Integer, ChannelHandlerContext> clientCtxMap;
     private static ConcurrentHashMap<String, ChannelHandlerContext> nodeCtxMap;
     private static ConcurrentHashMap<String, String> usernameMap;
-    private final RedisTemplate redisTemplate;
-    private final UserService userService;
-    private final NodeService nodeService;
-    private final TunnelService tunnelService;
-    private final ClientServer clientServer;
+    private RedisTemplate redisTemplate;
+    private UserService userService;
+    private NodeService nodeService;
+    private TunnelService tunnelService;
+    private ClientServer clientServer;
+
     static {
         clientCtxMap = new ConcurrentHashMap<>();
         nodeCtxMap = new ConcurrentHashMap<>();
@@ -52,12 +56,13 @@ public class PsServiceImpl implements PsService {
     }
 
     @Value("${u2ps.askNode.num:100}")
-    public void setAskNodeNum(Integer askNodeNum){
-        AskNodeNum=askNodeNum;
+    public void setAskNodeNum(Integer askNodeNum) {
+        AskNodeNum = askNodeNum;
     }
+
     @Value("${u2ps.askNode.interval:100}")
-    public void setAskNodeInterval(Integer askNodeInterval){
-        AskNodeInterval=askNodeInterval;
+    public void setAskNodeInterval(Integer askNodeInterval) {
+        AskNodeInterval = askNodeInterval;
     }
 
     public PsServiceImpl(RedisTemplate redisTemplate, UserService userService, NodeService nodeService, TunnelService tunnelService, ClientServer clientServer) {
@@ -70,12 +75,13 @@ public class PsServiceImpl implements PsService {
 
     /**
      * 节点or普通用户判断
+     *
      * @param ctx 连接
      * @return 是否
      */
-    public  boolean isNode(ChannelHandlerContext ctx) {
-        String ip= IpUtils.GetIPByCtx(ctx);
-        if(!nodeCtxMap.containsKey(ip)){
+    public boolean isNode(ChannelHandlerContext ctx) {
+        String ip = IpUtils.GetIPByCtx(ctx);
+        if (!nodeCtxMap.containsKey(ip)) {
             return false;
         }
         List<Client> clientsByIp = clientServer.getClientsByIp(ip);
@@ -89,6 +95,7 @@ public class PsServiceImpl implements PsService {
         }
         return true;
     }
+
     public static void addClientCtx(Integer clientId, ChannelHandlerContext ctx) {
         clientCtxMap.put(clientId, ctx);
     }
@@ -108,7 +115,7 @@ public class PsServiceImpl implements PsService {
     public static ChannelHandlerContext getClientCtx(Integer clientId) {
         try {
             return clientCtxMap.get(clientId);
-        }catch (NullPointerException ignored){
+        } catch (NullPointerException ignored) {
         }
         return null;
     }
@@ -118,15 +125,17 @@ public class PsServiceImpl implements PsService {
     }
 
     public static void sendMsg(ChannelHandlerContext ctx, String type, String msg, Object data) {
-        sendMsg(ctx, new Msg(type, msg,  JSON.toJSONString(data)).toJsonStr() + System.getProperty("line.separator"));
+        sendMsg(ctx, new Msg(type, msg, JSON.toJSONString(data)).toJsonStr() + System.getProperty("line.separator"));
     }
 
     public static void sendMsg(ChannelHandlerContext ctx, String type, String msg) {
         sendMsg(ctx, new Msg(type, msg, null).toJsonStr() + System.getProperty("line.separator"));
     }
+
     public static void sendDataMsg(ChannelHandlerContext ctx, String type, Object data) {
-        sendMsg(ctx, new Msg(type, "",  JSON.toJSONString(data)).toJsonStr() + System.getProperty("line.separator"));
+        sendMsg(ctx, new Msg(type, "", JSON.toJSONString(data)).toJsonStr() + System.getProperty("line.separator"));
     }
+
     public static void sendMsg(ChannelHandlerContext ctx, String msg) {
         try {
             byte[] reqMsgByte = msg.getBytes(StandardCharsets.UTF_8);
@@ -149,29 +158,30 @@ public class PsServiceImpl implements PsService {
     public void Authentication(ChannelHandlerContext ctx, Msg msg) {
         //客户端认证
         String ipAddr = IpUtils.GetIPByCtx(ctx);
-        if(msg.getType().equals(Msg.AuthenticationClient)){
+        if (msg.getType().equals(Msg.AuthenticationClient)) {
             Client clientByKey = clientServer.getClientByKey(Msg.getStringData(msg));
-            if(clientByKey!=null){
+            if (clientByKey != null) {
                 //更新客户端在线
-                clientServer.setOnlineAndIp(clientByKey.getId(),true,ipAddr);
+                clientServer.setOnlineAndIp(clientByKey.getId(), true, ipAddr);
                 //添加到客户端Map
-                addClientCtx(clientByKey.getId(),ctx);
-                Map<String,Object> rs=new HashMap<>(4);
+                addClientCtx(clientByKey.getId(), ctx);
+                Map<String, Object> rs = new HashMap<>(4);
                 //返回客户端所需数据
                 List<Tunnel> tunnelsByClientId = tunnelService.getTunnelsByClientId(clientByKey.getId());
                 List<Node> nodeByTunnels = nodeService.getNodeByTunnelsOnLin(tunnelsByClientId);
-                rs.put("tunnels",tunnelsByClientId);
-                rs.put("nodes",nodeByTunnels);
-                rs.put("client",clientByKey);
-                sendMsg(ctx, Msg.TypeAuthenticationResultOk, "连接服务端成功!",rs);
-            }else {
+                rs.put("tunnels", tunnelsByClientId);
+                rs.put("nodes", nodeByTunnels);
+                rs.put("client", clientByKey);
+                rs.put("versions", redisTemplate.opsForValue().get("up2s_versions"));
+                sendMsg(ctx, Msg.TypeAuthenticationResultOk, "连接服务端成功!", rs);
+            } else {
                 sendMsg(ctx, Msg.AuthenticationResultErr, "请检查你的Key是否正确!");
                 ctx.close();
             }
             return;
         }
         //Node认证
-        Node nodeByIp =  nodeService.getNodeByIp(ipAddr);
+        Node nodeByIp = nodeService.getNodeByIp(ipAddr);
         User user = userService.checkToken(Msg.getStringData(msg));
         if (user != null) {
             addUsername(ctx.channel().id().asShortText(), user.getUsername());
@@ -179,19 +189,28 @@ public class PsServiceImpl implements PsService {
                 addNodeCtx(ipAddr, ctx);
                 //更改服务器在线状态
                 nodeService.setOnline(ipAddr, true);
-                sendMsg(ctx, Msg.TypeAuthenticationResultOk, "连接服务端成功!",nodeByIp);
+                Map<String, Object> rs = new HashMap<>(2);
+                rs.put("node", nodeByIp);
+                rs.put("versions", redisTemplate.opsForValue().get("up2s_versions"));
+                sendMsg(ctx, Msg.TypeAuthenticationResultOk, "连接服务端成功!", rs);
+                return;
             }
-        }else {
-            sendMsg(ctx, Msg.AuthenticationResultErr, "请检查你的Token是否正确!");
+            sendMsg(ctx, Msg.AuthenticationResultErr, "没有找到节点信息!");
             ctx.close();
+            return;
         }
+        sendMsg(ctx, Msg.AuthenticationResultErr, "请检查你的Token是否正确!");
+        ctx.close();
+
     }
+
     /**
      * 向节点发送它的所有隧道信息
+     *
      * @param ctx
      */
-    public  void sendAllTunnel(ChannelHandlerContext ctx){
-        if(isNode(ctx)) {
+    public void sendAllTunnel(ChannelHandlerContext ctx) {
+        if (isNode(ctx)) {
             List<Tunnel> tunnelsByNodeIp = tunnelService.getTunnelsByNodeIp(IpUtils.GetIPByCtx(ctx));
             sendDataMsg(ctx, Msg.AllTunnel, tunnelsByNodeIp);
         }
@@ -199,6 +218,7 @@ public class PsServiceImpl implements PsService {
 
     /**
      * 连接断开处理
+     *
      * @param ctx
      */
     public void disconnect(ChannelHandlerContext ctx) {
@@ -208,35 +228,36 @@ public class PsServiceImpl implements PsService {
             nodeCtxMap.remove(ip);
             //改变节点状态
             nodeService.setOnline(ip, false);
-        }else {
+        } else {
             log.info("客户端退出");
             //改变客户端状态
             List<Integer> key = (List<Integer>) MapUtil.getKey(clientCtxMap, ctx);
-            if(key.size()>0){
+            if (key.size() > 0) {
                 Integer id = key.get(0);
                 clientCtxMap.remove(id);
-                clientServer.setOnline(id,false);
+                clientServer.setOnline(id, false);
             }
         }
     }
 
     /**
      * 询问Node端口是否被占用
+     *
      * @param ip
      * @param port
      * @return
      */
     @Override
-    public  boolean isNodePortUse(String ip,Integer port){
+    public boolean isNodePortUse(String ip, Integer port) {
         ChannelHandlerContext ctx = nodeCtxMap.get(ip);
-        if (ctx!=null){
+        if (ctx != null) {
             String Key = UUID.randomUUID().toString().replace("-", "");
-            sendMsg(ctx, Msg.IsPortUse,Key,port);
-            for (int i = 0; i <AskNodeNum ; i++) {
+            sendMsg(ctx, Msg.IsPortUse, Key, port);
+            for (int i = 0; i < AskNodeNum; i++) {
                 Object r = redisTemplate.opsForValue().get(Key);
-                if(r!=null){
+                if (r != null) {
                     redisTemplate.delete(Key);
-                    return (boolean)r;
+                    return (boolean) r;
                 }
                 try {
                     Thread.sleep(AskNodeInterval);
@@ -250,16 +271,16 @@ public class PsServiceImpl implements PsService {
 
     @Override
     public void updateNodeToC(Integer id, Node node) {
-        updateNode(getClientCtx(id),node);
+        updateNode(getClientCtx(id), node);
     }
 
     @Override
     public void updateNodeToN(String ip, Node node) {
-        updateNode(getNodeCtx(ip),node);
+        updateNode(getNodeCtx(ip), node);
     }
 
     @Override
-    public void updateTunnel(Tunnel tunnel,String nIp) {
+    public void updateTunnel(Tunnel tunnel, String nIp) {
         //客户端
         ChannelHandlerContext clientCtx = getClientCtx(tunnel.getClientId());
         if (clientCtx != null) {
@@ -288,77 +309,132 @@ public class PsServiceImpl implements PsService {
 
     /**
      * node返回应答处理
+     *
      * @param msg
      */
-    public void isNodePortUse(Msg msg){
-        redisTemplate.opsForValue().set(msg.getMsg(), Msg.getBooleanData(msg),1, TimeUnit.MINUTES);
+    public void isNodePortUse(Msg msg) {
+        redisTemplate.opsForValue().set(msg.getMsg(), Msg.getBooleanData(msg), 1, TimeUnit.MINUTES);
     }
 
+    public void TcpWeb(ChannelHandlerContext ctx,Msg msg){
+        Integer tid = Msg.getData(msg, Integer.class);
+        tunnelService.deleteTunnelByNodeIp(tid,IpUtils.GetIPByCtx(ctx));
+    }
     /**
      * 更新 增加 隧道
+     *
      * @param ctx
      * @param tunnel
      */
-    public  void updateTunnel(ChannelHandlerContext ctx,Tunnel tunnel){
-        sendDataMsg(ctx, Msg.UpdateTunnel,tunnel);
+    public void updateTunnel(ChannelHandlerContext ctx, Tunnel tunnel) {
+        sendDataMsg(ctx, Msg.UpdateTunnel, tunnel);
     }
 
     /**
      * 删除隧道
+     *
      * @param ctx
      * @param id
      */
-    public  void deleteTunnel(ChannelHandlerContext ctx,Integer id){
-        sendDataMsg(ctx, Msg.DeleteTunnel,id);
+    public void deleteTunnel(ChannelHandlerContext ctx, Integer id) {
+        sendDataMsg(ctx, Msg.DeleteTunnel, id);
     }
 
     /**
      * 删除node
+     *
      * @param ctx
      */
-    public  void deleteNode(ChannelHandlerContext ctx){
-        sendDataMsg(ctx, Msg.DeleteNode,null);
+    public void deleteNode(ChannelHandlerContext ctx) {
+        sendDataMsg(ctx, Msg.DeleteNode, null);
     }
 
     /**
      * 更新节点
+     *
      * @param ctx
      * @param node
      */
-    public  void updateNode(ChannelHandlerContext ctx,Node node){
-        sendDataMsg(ctx, Msg.UpdateNode,node);
+    public void updateNode(ChannelHandlerContext ctx, Node node) {
+        sendDataMsg(ctx, Msg.UpdateNode, node);
     }
 
     /**
      * 流量更新
+     *
      * @param msg
      */
-    public void updateFlow(Msg msg){
+    public void updateFlow(Msg msg) {
         FlowType flowType = Msg.getData(msg, FlowType.class);
-        Flow nodeFlow = (Flow) redisTemplate.opsForValue().get(Flow.NodeFlowPrefix + flowType.getNodeId());
-        Flow tunnelFlow = (Flow) redisTemplate.opsForValue().get(Flow.TunnelFlowPrefix + flowType.getTunnelId());
-        //增加节点流量
-        if(nodeFlow==null){
-            nodeFlow = new Flow(flowType.getFlow(),flowType.getFlow());
-        }else {
-            nodeFlow.addUP(flowType.getFlow());
-            nodeFlow.addDown(flowType.getFlow());
-        }
-        //增加隧道流量
-        if(tunnelFlow==null){
-            tunnelFlow = new Flow(flowType.getUp() ? flowType.getFlow() : 0, flowType.getUp() ? 0 : flowType.getFlow());
-        }else {
+        //计算流量
+        userService.flowCalculation(flowType.getTunnelId(), flowType.getFlow());
+            if (flowType.getNodeId() == -1) {
+                Flow tunnelFlow = (Flow) redisTemplate.opsForValue().get(Flow.TunnelFlowPrefix + flowType.getTunnelId() + Flow.ClientSuffix);
+                //增加隧道流量
+                if (tunnelFlow == null) {
+                    tunnelFlow = new Flow(flowType.getUp() ? flowType.getFlow() : 0, flowType.getUp() ? 0 : flowType.getFlow());
+                } else {
+                    //是上传?
+                    if (flowType.getUp()) {
+                        tunnelFlow.addUP(flowType.getFlow());
+                    }//噢,不是下载啦!
+                    else {
+                        tunnelFlow.addDown(flowType.getFlow());
+                    }
+                }
+                redisTemplate.opsForValue().set(Flow.TunnelFlowPrefix + flowType.getTunnelId() + Flow.ClientSuffix, tunnelFlow);
+                return;
+            }
+            Flow nodeFlow = (Flow) redisTemplate.opsForValue().get(Flow.NodeFlowPrefix + flowType.getNodeId());
+            Flow tunnelFlow = (Flow) redisTemplate.opsForValue().get(Flow.TunnelFlowPrefix + flowType.getTunnelId());
+            //增加节点流量
+            if (nodeFlow == null) {
+                nodeFlow = new Flow(flowType.getFlow(), flowType.getFlow());
+            } else {
+                nodeFlow.addUP(flowType.getFlow());
+                nodeFlow.addDown(flowType.getFlow());
+            }
+            redisTemplate.opsForValue().set(Flow.NodeFlowPrefix + flowType.getNodeId(), nodeFlow);
+            //增加隧道流量
+            if (tunnelFlow == null) {
+                tunnelFlow = new Flow(0L, 0L);
+            }
             //是上传?
-            if (flowType.getUp()){
+            if (flowType.getUp()) {
+                //计入总数
+                CacheFlowCount.addUP(flowType.getFlow());
+                CacheFlowToday.addUP(flowType.getFlow());
                 tunnelFlow.addUP(flowType.getFlow());
             }//噢,不是下载啦!
             else {
+                CacheFlowCount.addDown(flowType.getFlow());
+                CacheFlowToday.addDown(flowType.getFlow());
                 tunnelFlow.addDown(flowType.getFlow());
             }
-        }
-        redisTemplate.opsForValue().set(Flow.NodeFlowPrefix + flowType.getNodeId(), nodeFlow);
-        redisTemplate.opsForValue().set(Flow.TunnelFlowPrefix + flowType.getNodeId(), tunnelFlow);
+            if (CacheFlowCount.count() > Flow.MB100) {
+                Flow flow = (Flow) redisTemplate.opsForValue().get(Flow.FlowCount);
+                if (flow == null) {
+                    redisTemplate.opsForValue().set(Flow.FlowCount, CacheFlowCount);
+                } else {
+                    flow.add(CacheFlowCount);
+                    redisTemplate.opsForValue().set(Flow.FlowCount, flow);
+                }
+                CacheFlowCount.clear();
+            }
+            if (CacheFlowToday.count() > Flow.MB100) {
+                Flow flow = (Flow) redisTemplate.opsForValue().get(Flow.FlowToDayPrefix + DateUtils.getDay());
+                if (flow == null) {
+                    redisTemplate.opsForValue().set(Flow.FlowToDayPrefix + DateUtils.getDay(), CacheFlowToday, 30, TimeUnit.DAYS);
+                } else {
+                    flow.add(CacheFlowToday);
+                    redisTemplate.opsForValue().set(Flow.FlowToDayPrefix + DateUtils.getDay(), flow, 30, TimeUnit.DAYS);
+                }
+                CacheFlowToday.clear();
+            }
+            redisTemplate.opsForValue().set(Flow.TunnelFlowPrefix + flowType.getTunnelId(), tunnelFlow);
+
     }
+
     @Override
     public boolean test() {
         return true;

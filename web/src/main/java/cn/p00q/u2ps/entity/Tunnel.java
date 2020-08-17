@@ -51,7 +51,6 @@ public class Tunnel implements Serializable {
      * 所属用户
      */
     @Null(message = "不能修改所属用户",groups = {Update.class})
-    @NotBlank(message = "所属用户不能为空",groups = {Create.class})
     private String username;
 
     /**

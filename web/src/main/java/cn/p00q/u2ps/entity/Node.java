@@ -1,5 +1,6 @@
 package cn.p00q.u2ps.entity;
 
+
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.*;
@@ -32,7 +33,6 @@ public class Node implements Serializable {
     /**
      * 节点服务端口
      */
-    @NotNull(message = "端口不能为空", groups = {Create.class})
     @Min(value = 1, groups = {Create.class})
     @Max(value = 65535, groups = {Create.class})
     private Integer port;
@@ -53,7 +53,6 @@ public class Node implements Serializable {
      * 最多隧道数
      */
     @Column(name = "max_tunnel")
-    @NotNull(groups = {Create.class})
     @Min(value = 1, groups = {Create.class})
     private Integer maxTunnel;
 
@@ -61,14 +60,12 @@ public class Node implements Serializable {
      * 是否允许web
      */
     @Column(name = "allow_web")
-    @NotNull(groups = {Create.class})
     private Boolean allowWeb;
 
     /**
      * 流量倍率
      */
     @Column(name = "flow_ratio")
-    @NotNull(groups = {Create.class})
     @Max(value = 10,groups = {Create.class})
     private Float flowRatio;
 
@@ -93,6 +90,15 @@ public class Node implements Serializable {
      * 是否在线
      */
     private Boolean online;
+    private Integer bandwidth;
+
+    public Integer getBandwidth() {
+        return bandwidth;
+    }
+
+    public void setBandwidth(Integer bandwidth) {
+        this.bandwidth = bandwidth;
+    }
 
     /**
      * 获取node id
@@ -311,7 +317,7 @@ public class Node implements Serializable {
         this.online = online;
     }
 
-    public Node(String ip, Integer port, String countriesRegions, String ports, Integer maxTunnel, Boolean allowWeb, Float flowRatio, Date creationTime, String username, Boolean open, Boolean online) {
+    public Node(String ip, Integer port, String countriesRegions, String ports, Integer maxTunnel,  Boolean allowWeb, Float flowRatio, Date creationTime, String username, Boolean open, Boolean online, Integer bandwidth) {
         this.ip = ip;
         this.port = port;
         this.countriesRegions = countriesRegions;
@@ -323,8 +329,28 @@ public class Node implements Serializable {
         this.username = username;
         this.open = open;
         this.online = online;
+        this.bandwidth = bandwidth;
     }
 
     public Node() {
+    }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "id=" + id +
+                ", ip='" + ip + '\'' +
+                ", port=" + port +
+                ", countriesRegions='" + countriesRegions + '\'' +
+                ", ports='" + ports + '\'' +
+                ", maxTunnel=" + maxTunnel +
+                ", allowWeb=" + allowWeb +
+                ", flowRatio=" + flowRatio +
+                ", creationTime=" + creationTime +
+                ", username='" + username + '\'' +
+                ", open=" + open +
+                ", online=" + online +
+                ", bandwidth=" + bandwidth +
+                '}';
     }
 }

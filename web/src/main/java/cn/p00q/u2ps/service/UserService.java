@@ -70,4 +70,17 @@ public interface UserService {
      * @return
      */
     Result forgotPassword(String email,String password);
+
+    /**
+     * 总注册用户
+     * @return
+     */
+    Integer count();
+
+    /**
+     * 获取token
+     * @param username
+     * @return
+     */
+    String getToken(String username);
 }

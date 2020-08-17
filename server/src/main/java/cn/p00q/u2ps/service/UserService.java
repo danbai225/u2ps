@@ -22,4 +22,10 @@ public interface UserService {
      */
      User checkToken(String token);
 
+    /**
+     * 计算流量消耗
+     * @param tid
+     * @param flow
+     */
+     void flowCalculation(Integer tid,Long flow);
 }

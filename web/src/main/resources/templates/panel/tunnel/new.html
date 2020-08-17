@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<!--suppress ALL-->
+<html lang="zh-CN" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>U2PS | 创建隧道</title>
+    <!-- 告诉浏览器屏幕自适应 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Font Awesome -->
+    <link href="https://cdn.staticfile.org/font-awesome/5.14.0/css/all.css" rel="stylesheet">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://cdn.staticfile.org/ionicons/5.1.2/collection/components/icon/icon.min.css">
+    <!-- 主题样式 -->
+    <link href="https://cdn.staticfile.org/admin-lte/3.0.5/css/adminlte.min.css" rel="stylesheet">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="https://cdn.staticfile.org/overlayscrollbars/1.13.0/css/OverlayScrollbars.min.css">
+    <!-- 离线 Google 字体: Source Sans Pro -->
+    <link href="/css/google.css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+    <!-- 导航栏 -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <!-- 左侧导航栏链接 -->
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+        </ul>
+    </nav>
+    <!-- /.navbar -->
+
+    <!-- 主侧边栏容器 -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- 侧边栏用户面板（可选） -->
+            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                <div class="info">
+                    <a href="#" class="d-block">DanBai</a>
+                </div>
+            </div>
+
+            <!-- 侧边栏菜单 -->
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+                    data-accordion="false">
+                    <!-- 使用 .nav-icon 类添加图标，
+                         或使用 font-awesome 或其他任何图标字体库 -->
+                    <li class="nav-item has-treeview">
+                        <a href="/panel/index" class="nav-link">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>首页</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-bullseye"></i>
+                            <p>节点<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="/panel/node/list" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>节点列表</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/panel/node/new" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>创建节点</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/panel/node/my" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>我的节点</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item ">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-podcast"></i>
+                            <p>客户端<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="/panel/client/list" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>客户端列表</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/panel/client/new" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>创建客户端</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-treeview  menu-open">
+                        <a href="/panel/index" class="nav-link">
+                            <i class="nav-icon fas fa-road"></i>
+                            <p>隧道<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="/panel/tunnel/list" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>隧道列表</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/panel/tunnel/new" class="nav-link active">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>创建隧道</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-treeview">
+                        <a href="/panel/index" class="nav-link">
+                            <i class="nav-icon fas fa-user-circle"></i>
+                            <p>个人信息</p>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <!-- /.sidebar-menu -->
+        </div>
+        <!-- /.sidebar -->
+    </aside>
+
+    <!-- Content Wrapper. 包含页面内容 -->
+    <div class="content-wrapper">
+        <!-- 主体内容 -->
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <!-- left column -->
+                    <div class="col-md-6">
+                        <!-- general form elements -->
+                        <div class="card card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title">创建节点</h3>
+                            </div>
+                            <!-- /.card-header -->
+                            <!-- form start -->
+                            <form id="newTunnel" role="form" method="post">
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label>节点列表</label>
+                                        <select class="form-control" name="nodeId">
+                                            <th:block th:each="node,nodelStat : ${Nodes}">
+                                                <option th:text="${node.id+'-'+node.ports+'-'+node.countriesRegions}" th:selected="${nodeId==node.id}" th:value="${node.id}"></option>
+                                            </th:block>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>目标IP:</label>
+                                        <input type="text" class="form-control" placeholder="请输入目标IP" name="targetIp">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>目标端口:</label>
+                                        <input type="number" class="form-control" placeholder="请输入目标端口" name="targetPort">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>服务端口:</label>
+                                        <input type="number" id="servicePort" class="form-control" placeholder="请输入服务端口" name="servicePort">
+                                    </div>
+                                    <div class="form-check">
+                                        <input id="checkPort" class="form-check-input" type="checkbox" name="checkPort">
+                                        <label>确认端口是否可用:</label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>代理类型</label>
+                                        <select class="form-control" name="type">
+                                            <option value="1">TCP</option>
+                                            <option value="2">UDP</option>
+                                            <option value="3">HTTP</option>
+                                            <option value="4">SOCKS5</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>客户端列表</label>
+                                        <select class="form-control" name="clientId">
+                                            <th:block th:each="client,clientStat : ${Client}">
+                                                <option th:text="${client.id+'-'+client.remark}" th:value="${client.id}"></option>
+                                            </th:block>
+                                        </select>
+                                    </div>
+                                    <input type=hidden name="token" th:value="${session.Token}">
+                                </div>
+                                <!-- /.card-body -->
+                                <div class="card-footer">
+                                    <button onclick="post()" type="button" class="btn btn-primary float-right">创建隧道</button>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- /.card -->
+                    </div>
+                    <!--/.col (left) -->
+                    <!-- right column -->
+                    <div class="col-md-6">
+                        <!-- 禁用常规表单元素 -->
+                        <div class="card card-warning">
+                            <div class="card-header">
+                                <h3 class="card-title">节点介绍</h3>
+                            </div>
+                            <!-- /.card-header -->
+                            <h4>表单参数介绍:</h4>
+                            <p>- 节点列表 选择你要把代理创建在那个节点服务器上.</p>
+                            <p>- 目标IP 此IP为客户端代理的IP.代理客户端本机应用填写127.0.0.1即可.</p>
+                            <p>- 目标端口 客户端代理的端口,即需要代理的应用端口.</p>
+                            <p>- 服务端口 也就是真正访问的端口,节点ip+端口即可访问到代理应用.</p>
+                            <p>- 确认端口是否可用 需要向节点发送询问端口是否可以使用.</p>
+                            <p>- 代理类型 TCP代理不能代理Web应用.</p>
+                            <p>- 客户端列表 需要让那个客户端代理隧道.</p>
+                            <!-- /.card-body -->
+                        </div>
+                        <!-- /.card -->
+                    </div>
+                    <!--/.col (right) -->
+                </div>
+                <!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </section>
+    </div>
+    <!-- /.content-wrapper -->
+    <footer class="main-footer">
+        <strong>Copyright &copy; 2020<a href="https://u2ps.com">U2PS</a>.</strong>保留所有权利。
+        <div class="float-right d-none d-sm-inline-block">
+            <b>版本</b> 0.0.1
+        </div>
+    </footer>
+    <!-- Control Sidebar -->
+    <aside class="control-sidebar control-sidebar-dark">
+        <!-- 控制侧边栏内容在这里 -->
+    </aside>
+    <!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+<!-- jQuery -->
+<!-- jQuery -->
+<script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Bootstrap 4 -->
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- overlayScrollbars -->
+<script src="https://cdn.staticfile.org/overlayscrollbars/1.13.0/js/jquery.overlayScrollbars.min.js"></script>
+<!-- AdminLTE App -->
+<script src="https://cdn.staticfile.org/admin-lte/3.0.5/js/adminlte.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-validate/1.19.2/jquery.validate.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-validate/1.19.2/localization/messages_zh.min.js"></script>
+<script th:inline="javascript">
+    $('#servicePort').on('input',function(e){
+        $("#checkPort").prop("checked",false);
+    });
+    $('#checkPort').change(function() {
+        $("#checkPort").prop("checked",false);
+        if($('#servicePort').val()>1&&$('#servicePort').val()<65535){
+            $.ajax({
+                //几个参数需要注意一下
+                type: "POST",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/v1/tunnel/port" ,//url
+                data: $('#newTunnel').serialize(),
+                success: function (result) {
+                    if(result.code==0){
+                        $("#checkPort").prop("checked",true);
+                    }else {
+                        $("#checkPort").prop("checked",false);
+                    }
+                    $(document).Toasts('create', {
+                        class: 'bg-info',
+                        title: '消息提醒',
+                        subtitle: '-U2PS',
+                        body: result.msg
+                    })
+                }
+            });
+        }else {
+            $(document).Toasts('create', {
+                class: 'bg-info',
+                title: '消息提醒',
+                subtitle: '-U2PS',
+                body: '请输入正确的服务端口'
+            })
+        }
+    });
+    $("#newTunnel").validate({
+        rules: {
+            targetIp: {required: true},
+            targetPort: {required: true,min:1,max:65535},
+            servicePort: {required: true,min:1,max:65535,},
+            checkPort: {required: true},
+            clientId: {required: true},
+            nodeId: {required: true},
+        }
+    })
+    function post(){
+        if (! $("#newTunnel").valid()) {
+            return;
+        }
+        $.ajax({
+            //几个参数需要注意一下
+            type: "POST",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            url: "/v1/tunnel/create" ,//url
+            data: $('#newTunnel').serialize(),
+            success: function (result) {
+                $(document).Toasts('create', {
+                    class: 'bg-info',
+                    title: '消息提醒',
+                    subtitle: '-U2PS',
+                    body: result.msg
+                })
+            }
+        });
+    }
+</script>
+</body>
+</html>

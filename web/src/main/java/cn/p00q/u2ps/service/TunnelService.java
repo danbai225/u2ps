@@ -66,4 +66,10 @@ public interface TunnelService {
      */
     Result delete(Integer id);
 
+    /**
+     * 获取用户隧道数量
+     * @param username
+     * @return
+     */
+    int getUserTunnelNum(String username);
 }

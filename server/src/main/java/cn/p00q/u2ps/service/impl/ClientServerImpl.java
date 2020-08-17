@@ -15,7 +15,7 @@ import java.util.List;
  **/
 @Service
 public class ClientServerImpl implements ClientServer {
-    private final ClientMapper clientMapper;
+    private  ClientMapper clientMapper;
 
     public ClientServerImpl(ClientMapper clientMapper) {
         this.clientMapper = clientMapper;

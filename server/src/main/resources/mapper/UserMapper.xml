@@ -8,7 +8,7 @@
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="username" jdbcType="VARCHAR" property="username" />
     <result column="password" jdbcType="VARCHAR" property="password" />
-    <result column="flow" jdbcType="DOUBLE" property="flow" />
+    <result column="flow" jdbcType="BIGINT" property="flow" />
     <result column="type" jdbcType="INTEGER" property="type" />
     <result column="realname" jdbcType="VARCHAR" property="realname" />
     <result column="id_card" jdbcType="VARCHAR" property="idCard" />

@@ -10,9 +10,9 @@ public class FlowType {
     private Boolean isUp;
     private Integer NodeId;
     private Integer TunnelId;
-    private long flow;
+    private Long flow;
 
-    public FlowType(Boolean isUp, Integer nodeId, Integer tunnelId, long flow) {
+    public FlowType(Boolean isUp, Integer nodeId, Integer tunnelId, Long flow) {
         this.isUp = isUp;
         NodeId = nodeId;
         TunnelId = tunnelId;
@@ -53,11 +53,11 @@ public class FlowType {
         TunnelId = tunnelId;
     }
 
-    public long getFlow() {
+    public Long getFlow() {
         return flow;
     }
 
-    public void setFlow(long flow) {
+    public void setFlow(Long flow) {
         this.flow = flow;
     }
 

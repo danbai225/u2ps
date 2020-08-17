@@ -1,11 +1,16 @@
 package cn.p00q.u2ps.service.impl;
 
+import cn.p00q.u2ps.bean.Result;
 import cn.p00q.u2ps.entity.Client;
+import cn.p00q.u2ps.entity.Node;
 import cn.p00q.u2ps.mapper.ClientMapper;
 import cn.p00q.u2ps.service.ClientServer;
 import org.springframework.stereotype.Service;
+import tk.mybatis.mapper.entity.Example;
 
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @program: u2ps
@@ -15,7 +20,7 @@ import java.util.List;
  **/
 @Service
 public class ClientServerImpl implements ClientServer {
-    private final ClientMapper clientMapper;
+    private  ClientMapper clientMapper;
 
     public ClientServerImpl(ClientMapper clientMapper) {
         this.clientMapper = clientMapper;
@@ -57,5 +62,71 @@ public class ClientServerImpl implements ClientServer {
         Client client = new Client();
         client.setClientIp(ip);
         return clientMapper.select(client);
+    }
+
+    @Override
+    public Integer onlineClientCount() {
+        //按条件查询
+        Client client = new Client();
+        client.setOnLine(true);
+        return clientMapper.selectCount(client);
+    }
+
+    @Override
+    public List<Client> getClientByUsername(String username) {
+        Client client = new Client();
+        client.setUsername(username);
+        return clientMapper.select(client);
+    }
+
+    @Override
+    public Result updateById(Client c) {
+        if(c.getSecretKey()!=null){
+            if(c.getSecretKey().equals(Client.AutoGenerate)){
+                String key;
+                do{
+                    key=UUID.randomUUID().toString().replace("-", "");
+                }while (getClientByKey(key)!=null);
+                c.setSecretKey(key);
+            }else {
+                if(getClientByKey(c.getSecretKey())!=null){
+                    return Result.err("key不唯一");
+                }
+            }
+        }
+        return clientMapper.updateByPrimaryKeySelective(c)>0?Result.success("更新成功"):Result.err("更新失败");
+    }
+
+    @Override
+    public boolean delete(Integer id) {
+        return clientMapper.delete(getClientById(id))>0;
+    }
+
+    @Override
+    public Result create(Client client) {
+        client.setOnLine(false);
+        client.setCreationTime(new Date());
+        if(client.getSecretKey()!=null){
+            if(client.getSecretKey().equals(Client.AutoGenerate)){
+                String key;
+                do{
+                    key=UUID.randomUUID().toString().replace("-", "");
+                }while (getClientByKey(key)!=null);
+                client.setSecretKey(key);
+            }else {
+                if(getClientByKey(client.getSecretKey())!=null){
+                    return Result.err("key不唯一");
+                }
+            }
+        }
+        return clientMapper.insert(client)>0?Result.success("创建成功"):Result.err("创建失败");
+    }
+
+    @Override
+    public List<Client> getUserClientNewTunnel(String username) {
+        Example commentExample = new Example(Client.class);
+        commentExample.selectProperties("id","remark");
+        commentExample.createCriteria().andEqualTo("username",username);
+        return clientMapper.selectByExample(commentExample);
     }
 }

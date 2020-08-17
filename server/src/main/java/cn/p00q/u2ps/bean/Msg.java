@@ -121,6 +121,13 @@ public class Msg{
      * 删除node
      */
     public static final String DeleteNode="DeleteNode";
+    /**
+     * 流量统计更新
+     */
     public static final String UpdateFlow="UpdateFlow";
+    /**
+     * 发现tcp web站点
+     */
+    public static final String TcpWeb="TcpWeb";
 
 }

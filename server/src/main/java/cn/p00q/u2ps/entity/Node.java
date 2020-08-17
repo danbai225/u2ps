@@ -77,6 +77,15 @@ public class Node implements Serializable {
      * 是否在线
      */
     private Boolean online;
+    private Integer bandwidth;
+
+    public Integer getBandwidth() {
+        return bandwidth;
+    }
+
+    public void setBandwidth(Integer bandwidth) {
+        this.bandwidth = bandwidth;
+    }
 
     /**
      * 获取node id
@@ -295,7 +304,7 @@ public class Node implements Serializable {
         this.online = online;
     }
 
-    public Node(String ip, Integer port, String countriesRegions, String ports, Integer maxTunnel, Boolean allowWeb, Float flowRatio, Date creationTime, String username, Boolean open, Boolean online) {
+    public Node(String ip, Integer port, String countriesRegions, String ports, Integer maxTunnel, Boolean allowWeb, Float flowRatio, Date creationTime, String username, Boolean open, Boolean online, Integer bandwidth) {
         this.ip = ip;
         this.port = port;
         this.countriesRegions = countriesRegions;
@@ -307,6 +316,7 @@ public class Node implements Serializable {
         this.username = username;
         this.open = open;
         this.online = online;
+        this.bandwidth = bandwidth;
     }
 
     public Node() {

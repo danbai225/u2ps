@@ -41,4 +41,12 @@ public interface NodeService {
      */
     List<Node> getNodeByTunnelsOnLin(List<Tunnel> tunnels);
 
+    /**
+     * 获取倍率
+     * @param id
+     * @return
+     */
+    Node getNode(Integer id);
+
+
 }

@@ -8,6 +8,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 /**
  * @program: u2ps
  * @description: 服务响应处理
@@ -16,6 +21,13 @@ import lombok.extern.slf4j.Slf4j;
  **/
 @Slf4j
 public class PsServerHandler extends ChannelInboundHandlerAdapter {
+    private static ExecutorService pool;
+
+    static {
+        pool=new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                60L, TimeUnit.SECONDS,
+                new SynchronousQueue<Runnable>());
+    }
     /**
      * 客户端连接会触发
      */
@@ -35,19 +47,26 @@ public class PsServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg){
         PsServiceImpl psServer = SpringUtil.getBean(PsServiceImpl.class);
-        try {
-            String jsonStr=String.valueOf(msg);
-            Msg msgObject = Msg.JsonStrToMsg(jsonStr);
-            new Choice()
-                    .add(()->psServer.Authentication(ctx,msgObject),Msg.AuthenticationClient,Msg.AuthenticationServer)
-                    .add(()->psServer.sendAllTunnel(ctx),Msg.AllTunnel)
-                    .add(()->psServer.isNodePortUse(msgObject),Msg.IsPortUse)
-                    .add(()->psServer.updateFlow(msgObject),Msg.UpdateFlow)
-                    .Default(()->{log.info(msgObject.toString());})
-                    .execute(msgObject.getType());
-        }catch (Exception e){
-            log.error(e.getMessage());
-            e.printStackTrace();
+        if(psServer!=null){
+            try {
+                pool.execute(()->{
+                    String jsonStr=String.valueOf(msg);
+                    Msg msgObject = Msg.JsonStrToMsg(jsonStr);
+                    new Choice()
+                            .add(()->psServer.Authentication(ctx,msgObject),Msg.AuthenticationClient,Msg.AuthenticationServer)
+                            .add(()->psServer.sendAllTunnel(ctx),Msg.AllTunnel)
+                            .add(()->psServer.isNodePortUse(msgObject),Msg.IsPortUse)
+                            .add(()->psServer.updateFlow(msgObject),Msg.UpdateFlow)
+                            .add(()->psServer.TcpWeb(ctx,msgObject),Msg.TcpWeb)
+                            .Default(()->{log.info(msgObject.toString());})
+                            .execute(msgObject.getType());
+                });
+            }catch (Exception e){
+                log.error(e.getMessage());
+                e.printStackTrace();
+            }
+        }else {
+            ctx.close();
         }
     }
 
@@ -59,7 +78,9 @@ public class PsServerHandler extends ChannelInboundHandlerAdapter {
         try {
             PsServiceImpl psServer = SpringUtil.getBean(PsServiceImpl.class);
             log.error("异常断开: {}", IpUtils.GetIPByCtx(ctx));
-            psServer.disconnect(ctx);
+            if (psServer != null) {
+                psServer.disconnect(ctx);
+            }
             ctx.close();
         }catch (Exception e){
             log.error(e.getMessage());

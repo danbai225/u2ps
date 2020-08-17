@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<!--suppress ALL-->
+<html lang="zh-CN" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>U2PS | 在线节点列表</title>
+    <!-- 告诉浏览器屏幕自适应 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Font Awesome -->
+    <link href="https://cdn.staticfile.org/font-awesome/5.14.0/css/all.css" rel="stylesheet">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://cdn.staticfile.org/ionicons/5.1.2/collection/components/icon/icon.min.css">
+    <!-- 主题样式 -->
+    <link href="https://cdn.staticfile.org/admin-lte/3.0.5/css/adminlte.min.css" rel="stylesheet">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="https://cdn.staticfile.org/overlayscrollbars/1.13.0/css/OverlayScrollbars.min.css">
+   <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.staticfile.org/datatables/1.10.21/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap4.min.css">
+    <!-- 离线 Google 字体: Source Sans Pro -->
+    <link href="/css/google.css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+    <!-- 导航栏 -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <!-- 左侧导航栏链接 -->
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+        </ul>
+    </nav>
+    <!-- /.navbar -->
+
+    <!-- 主侧边栏容器 -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- 侧边栏用户面板（可选） -->
+            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                <div class="info">
+                    <a href="#" class="d-block">DanBai</a>
+                </div>
+            </div>
+
+            <!-- 侧边栏菜单 -->
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+                    data-accordion="false">
+                    <!-- 使用 .nav-icon 类添加图标，
+                         或使用 font-awesome 或其他任何图标字体库 -->
+                    <li class="nav-item has-treeview">
+                        <a href="/panel/index" class="nav-link">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>首页</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item has-treeview menu-open">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-bullseye"></i>
+                            <p>节点<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="/panel/node/list" class="nav-link active">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>节点列表</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/panel/node/new" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>创建节点</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/panel/node/my" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>我的节点</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-podcast"></i>
+                            <p>客户端<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="/panel/client/list" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>客户端列表</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/panel/client/new" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>创建客户端</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-treeview">
+                        <a href="/panel/index" class="nav-link">
+                            <i class="nav-icon fas fa-road"></i>
+                            <p>隧道<i class="right fas fa-angle-left"></i></p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="/panel/tunnel/list" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>隧道列表</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/panel/tunnel/new" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>创建隧道</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-treeview">
+                        <a href="/panel/index" class="nav-link">
+                            <i class="nav-icon fas fa-user-circle"></i>
+                            <p>个人信息</p>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <!-- /.sidebar-menu -->
+        </div>
+        <!-- /.sidebar -->
+    </aside>
+
+    <!-- Content Wrapper. 包含页面内容 -->
+    <div class="content-wrapper">
+        <!-- 主体内容 -->
+        <section class="content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">在线节点列表</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <table id="nodetable" class="table table-bordered table-striped">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>IP</th>
+                            <th>节点位置</th>
+                            <th>允许端口</th>
+                            <th>允许Web</th>
+                            <th>流量倍率</th>
+                            <th>带宽</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="node,nodeStat : ${Nodes}">
+                            <td th:text="${node.id}"></td>
+                            <td th:text="${node.ip}"></td>
+                            <td th:text="${node.countriesRegions}"></td>
+                            <td th:text="${node.ports}"></td>
+                            <td th:text="${node.allowWeb}"></td>
+                            <td th:text="${node.flowRatio}"></td>
+                            <td th:text="${node.bandwidth}"></td>
+                            <td th:text="${#dates.format(node.creationTime, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </section>
+        <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+    <footer class="main-footer">
+        <strong>Copyright &copy; 2020<a href="https://u2ps.com">U2PS</a>.</strong>保留所有权利。
+        <div class="float-right d-none d-sm-inline-block">
+            <b>版本</b> 0.0.1
+        </div>
+    </footer>
+
+    <!-- Control Sidebar -->
+    <aside class="control-sidebar control-sidebar-dark">
+        <!-- 控制侧边栏内容在这里 -->
+    </aside>
+    <!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery -->
+<script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- DataTables -->
+<script src="https://cdn.staticfile.org/datatables/1.10.21/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.staticfile.org/datatables/1.10.21/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.staticfile.org/datatables-responsive/2.2.5/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.3/js/responsive.bootstrap4.min.js"></script>
+<!-- overlayScrollbars -->
+<script src="https://cdn.staticfile.org/overlayscrollbars/1.13.0/js/jquery.overlayScrollbars.min.js"></script>
+<!-- AdminLTE App -->
+<script src="https://cdn.staticfile.org/admin-lte/3.0.5/js/adminlte.min.js"></script>
+<script th:inline="javascript">
+    function addTunnel(id) {
+        console.log("新隧道"+id)
+    }
+    $('#nodetable').DataTable({
+        "paging": true,
+        "lengthChange": false,
+        "searching": false,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "columnDefs" : [ {
+// 定义操作列,######以下是重点########
+            "targets" : 8,//操作按钮目标列
+            "data" : null,
+            "render" : function(data, type,row) {
+                return '<a  href="/panel/tunnel/new?id='+data[0]+'" class="btn btn-block btn-outline-primary btn-sm">创建隧道</a>';
+            }
+        } ],
+    });
+
+</script>
+</body>
+</html>

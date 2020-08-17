@@ -3,45 +3,59 @@ package cn.p00q.u2ps.entity;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 /**
  * @author DanBai
  */
 public class Client implements Serializable {
+    public interface Create {
+    }
+    public interface Update {
+    }
+    public static final String AutoGenerate="AutoGenerate";
     /**
      * 客户端id
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Null(message = "id数据库生成",groups = {Create.class})
+    @NotNull(groups = {Update.class})
     private Integer id;
 
     /**
      * 唯一密钥
      */
     @Column(name = "secret_key")
+    @NotNull(message = "key不能为空",groups = {Create.class})
     private String secretKey;
 
     /**
      * 客户端IP
      */
     @Column(name = "client_ip")
+    @Null(groups = {Update.class})
     private String clientIp;
 
     /**
      * 是否在线
      */
     @Column(name = "on_line")
+    @Null(groups = {Update.class})
     private Boolean onLine;
 
     /**
      * 所属用户名
      */
+    @Null(groups = {Update.class})
     private String username;
 
     /**
      * 创建时间
      */
     @Column(name = "creation_time")
+    @Null(groups = {Update.class})
     private Date creationTime;
 
     /**

@@ -26,10 +26,10 @@ import javax.validation.constraints.NotNull;
 @RestController
 @Validated
 public class NodeController {
-    private final TunnelService tunnelService;
-    private final UserService userService;
-    private final NodeService nodeService;
-    private final ClientServer clientServer;
+    private  TunnelService tunnelService;
+    private  UserService userService;
+    private  NodeService nodeService;
+    private  ClientServer clientServer;
 
     public NodeController(TunnelService tunnelService, UserService userService, NodeService nodeService, ClientServer clientServer) {
         this.tunnelService = tunnelService;
@@ -53,7 +53,7 @@ public class NodeController {
         if(user!=null&&nodeById!=null&&nodeById.getUsername().equals(user.getUsername())){
             return nodeService.delete(id)?Result.success("删除成功"):Result.err("删除失败");
         }
-        return Result.err("验证未通过,无权创建。");
+        return Result.err("验证未通过,无权删除。");
     }
     @PostMapping("/update")
     public Result update(@Validated(Node.Update.class) Node node,@NotBlank String token){

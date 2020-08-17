@@ -1,5 +1,6 @@
 package cn.p00q.u2ps.service;
 
+import cn.p00q.u2ps.bean.Result;
 import cn.p00q.u2ps.entity.Client;
 
 import java.util.List;
@@ -45,4 +46,45 @@ public interface ClientServer {
      * @return
      */
     List<Client> getClientsByIp(String ip);
+
+    /**
+     * 统计在线客户端
+     * @return
+     */
+    Integer onlineClientCount();
+
+    /**
+     * 获取用户客户端
+     * @param username
+     * @return
+     */
+    List<Client> getClientByUsername(String username);
+
+    /**
+     * 根据id更新
+     * @param c 更新信息
+     * @return
+     */
+    Result updateById(Client c);
+
+    /**
+     * 删除
+     * @param id
+     * @return
+     */
+    boolean delete(Integer id);
+
+    /**
+     * 创建客户端
+     * @param client
+     * @return
+     */
+    Result create(Client client);
+
+    /**
+     * 获取用户客户端
+     * @param username
+     * @return
+     */
+    List<Client> getUserClientNewTunnel(String username);
 }

@@ -32,13 +32,14 @@ import javax.validation.constraints.NotEmpty;
  * @create: 2020-08-12 15:29
  **/
 @Controller
+@Validated
 public class MainView {
     private final UserService userService;
     public MainView(UserService userService) {
         this.userService = userService;
     }
 
-    @GetMapping(value = "/index")
+    @GetMapping(value = {"/index","","/"})
     public String index() {
         return "index";
     }
@@ -62,6 +63,7 @@ public class MainView {
         User user1 = userService.getUserByUsername(user.getUsername());
         HttpSession session = request.getSession();
         session.setAttribute(User.class.getSimpleName(), user1);
+        session.setAttribute("Token", token);
         session.setMaxInactiveInterval(60 * 60 * 24);
         if(remember){
             Cookie cookie = new Cookie("JSESSIONID", session.getId());

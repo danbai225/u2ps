@@ -10,40 +10,74 @@ package cn.p00q.u2ps.bean;
 public class Flow {
     public static final String NodeFlowPrefix="NodeFlowPrefix_";
     public static final String TunnelFlowPrefix="TunnelFlowPrefix_";
+    public static final String ClientSuffix="_Client";
+    public static final String FlowCount="FlowCount";
+    public static final String FlowToDayPrefix="FlowToDay_";
+    public static final String UserFlowToDayPrefix="UserFlowToDay_";
+    public static long  MB100=1024*1024*100;
     /**
      * 上行
      */
-    private long up;
+    private Long up;
     /**
      * 下行
      */
-    private long down;
+    private Long down;
 
-    public Flow(long up, long down) {
+    public Flow(Long up, Long down) {
         this.up = up;
         this.down = down;
     }
 
-    public long getUp() {
+    public Long getUp() {
         return up;
     }
 
-    public void setUp(long up) {
+    public void setUp(Long up) {
         this.up = up;
     }
 
-    public long getDown() {
+    public Long getDown() {
         return down;
     }
 
-    public void setDown(long down) {
+    public void setDown(Long down) {
         this.down = down;
     }
-    public void addUP(long flow){
+    public void addUP(Long flow){
         this.up+=flow;
     }
-    public void addDown(long flow){
+    public void addDown(Long flow){
         this.down+=flow;
+    }
+    public void add(Flow flow){
+        this.up+=flow.up;
+        this.down+=flow.down;
+    }
+    public Long count(){
+        return up+down;
+    }
+    public void clear(){
+        this.up=0L;
+        this.down=0L;
+    }
+    public Flow up(){
+        return new Flow(up*1024,down*1024);
+    }
+    public Flow down(){
+        return new Flow(up/1024,down/1024);
+    }
+    public Flow toKB(){
+        return this.down();
+    }
+    public Flow toMB(){
+        return this.down().down();
+    }
+    public Flow toGB(){
+        return this.down().down().down();
+    }
+    public static Long toGB(Long flow){
+        return flow/(1024*3);
     }
     @Override
     public String toString() {

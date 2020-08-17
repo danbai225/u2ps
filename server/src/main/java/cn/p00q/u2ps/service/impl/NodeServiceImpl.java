@@ -20,8 +20,8 @@ import java.util.Set;
  **/
 @Service
 public class NodeServiceImpl implements NodeService {
-    private final NodeMapper nodeMapper;
-    private final ClientServer clientServer;
+    private  NodeMapper nodeMapper;
+    private  ClientServer clientServer;
 
     public NodeServiceImpl(NodeMapper nodeMapper, ClientServer clientServer) {
         this.nodeMapper = nodeMapper;
@@ -63,5 +63,13 @@ public class NodeServiceImpl implements NodeService {
         criteria.andEqualTo("online", true);
         return nodeMapper.selectByExample(example);
     }
+
+    @Override
+    public Node getNode(Integer id) {
+        Node node = new Node();
+        node.setId(id);
+        return nodeMapper.selectOne(node);
+    }
+
 
 }

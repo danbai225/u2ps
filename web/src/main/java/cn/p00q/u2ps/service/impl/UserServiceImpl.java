@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+import tk.mybatis.mapper.entity.Example;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,9 +33,9 @@ public class UserServiceImpl implements UserService {
     private static final String REDIS_VALIDATE_EMAIL_PREFIX = "validateEmail_";
     private static final String REDIS_USER_NEW_PASS_PREFIX="Password_";
     private static final String TOKEN_PREFIX = "token_";
-    private final UserMapper userMapper;
-    private final RedisTemplate redisTemplate;
-    private final EmailUtil emailUtil;
+    private  UserMapper userMapper;
+    private  RedisTemplate redisTemplate;
+    private  EmailUtil emailUtil;
 
     public UserServiceImpl(UserMapper userMapper, RedisTemplate redisTemplate, EmailUtil emailUtil) {
         this.userMapper = userMapper;
@@ -113,7 +114,7 @@ public class UserServiceImpl implements UserService {
         }
         //密码加密
         user.setPassword(DigestUtils.md5DigestAsHex((user.getUsername() + user.getPassword()).getBytes()));
-        user.setFlow(0d);
+        user.setFlow((long) 0);
         user.setRegisterTime(new Date());
         user.setType(1);
         //邮箱验证
@@ -179,5 +180,18 @@ public class UserServiceImpl implements UserService {
             return Result.success("请查看验证邮件");
         }
         return Result.err("不存在此邮箱的账号");
+    }
+
+    @Override
+    public Integer count() {
+        //统计总数
+        Example example = new Example(User.class);
+        int count = userMapper.selectCountByExample(example);
+        return count;
+    }
+
+    @Override
+    public String getToken(String username) {
+        return (String) redisTemplate.opsForValue().get(TOKEN_PREFIX + username);
     }
 }

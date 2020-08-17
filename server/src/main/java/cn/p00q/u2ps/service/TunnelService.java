@@ -31,4 +31,24 @@ public interface TunnelService {
      * @return
      */
     List<Tunnel> getTunnelsByClientId(Integer id);
+
+    /**
+     * 获取隧道
+     * @param id
+     * @return
+     */
+    Tunnel getById(Integer id);
+    /**
+     * 查询用户的所有隧道
+     * @param username
+     * @return
+     */
+    List<Tunnel> getTunnelsByUsername(String username);
+
+    /**
+     * 删除节点隧道
+     * @param tunnelId
+     * @param nIp
+     */
+    void deleteTunnelByNodeIp(Integer tunnelId,String nIp);
 }

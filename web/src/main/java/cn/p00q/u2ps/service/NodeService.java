@@ -5,6 +5,7 @@ import cn.p00q.u2ps.entity.Node;
 import cn.p00q.u2ps.entity.Tunnel;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @program: u2ps
@@ -45,7 +46,7 @@ public interface NodeService {
      * @param id id
      * @return node
      */
-    Node getNodeById(Integer id);
+    Node getNodeById(int id);
 
     /**
      * 创建节点
@@ -67,4 +68,43 @@ public interface NodeService {
      * @return
      */
     Result updateById(Node node);
+
+    /**
+     * 在线节点统计
+     * @return
+     */
+    int onlineNodeCount();
+
+    /**
+     * 获取节点列表
+     * @return
+     */
+    List<Node> getList();
+
+    /**
+     * 获取用户节点列表
+     * @param Username
+     * @return
+     */
+    List<Node> getMyList(String Username);
+
+    /**
+     * 获取节点列表
+     * @param list
+     * @return
+     */
+    Map<Integer,Node> getNodes(List<Tunnel> list);
+
+    /**
+     * 获取创建隧道时所需节点信息
+     * @return
+     */
+    List<Node> getNodesNewTunnel();
+
+    /**
+     * 获取节点ip
+     * @param id
+     * @return
+     */
+    String getIp(Integer id);
 }

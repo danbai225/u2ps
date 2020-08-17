@@ -5,6 +5,7 @@ import cn.p00q.u2ps.entity.Client;
 import cn.p00q.u2ps.entity.Node;
 import cn.p00q.u2ps.entity.Tunnel;
 import cn.p00q.u2ps.mapper.NodeMapper;
+import cn.p00q.u2ps.mapper.TunnelMapper;
 import cn.p00q.u2ps.service.ClientServer;
 import cn.p00q.u2ps.service.NodeService;
 import cn.p00q.u2ps.service.PsService;
@@ -14,9 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @program: u2ps
@@ -26,13 +25,16 @@ import java.util.Set;
  **/
 @Service
 public class NodeServiceImpl implements NodeService {
-    private final NodeMapper nodeMapper;
-    private final ClientServer clientServer;
+    private  NodeMapper nodeMapper;
+    private  ClientServer clientServer;
+    private TunnelMapper tunnelMapper;
     @Reference
     PsService psService;
-    public NodeServiceImpl(NodeMapper nodeMapper, ClientServer clientServer) {
+
+    public NodeServiceImpl(NodeMapper nodeMapper, ClientServer clientServer, TunnelMapper tunnelMapper) {
         this.nodeMapper = nodeMapper;
         this.clientServer = clientServer;
+        this.tunnelMapper = tunnelMapper;
     }
 
     @Override
@@ -72,7 +74,7 @@ public class NodeServiceImpl implements NodeService {
     }
 
     @Override
-    public Node getNodeById(Integer id) {
+    public Node getNodeById(int id) {
         Node node = new Node();
         node.setId(id);
         return nodeMapper.selectOne(node);
@@ -90,6 +92,11 @@ public class NodeServiceImpl implements NodeService {
         if (node.getPort() < 1 || node.getPort() > 65535) {
             return Result.err("端口不正确,1-65535");
         }
+        if(node.getAllowWeb()==null){
+            node.setAllowWeb(false);
+        }
+        node.setOpen(true);
+        node.setOnline(false);
         node.setCountriesRegions(IpUtils.getCityInfo(node.getIp()));
         if (nodeMapper.insert(node) > 0) {
             return Result.success("创建成功");
@@ -104,6 +111,9 @@ public class NodeServiceImpl implements NodeService {
             return true;
         }
         if(nodeMapper.delete(nodeById)>0){
+            Example commentExample = new Example(Tunnel.class);
+            commentExample.createCriteria().andEqualTo("nodeId",id);
+            tunnelMapper.deleteByExample(commentExample);
             psService.deleteNode(nodeById.getIp());
             return true;
         }
@@ -148,5 +158,64 @@ public class NodeServiceImpl implements NodeService {
             return Result.success("更新成功");
         }
         return Result.err("更新失败");
+    }
+
+    @Override
+    public int onlineNodeCount() {
+        //按条件查询
+        Node node = new Node();
+        node.setOnline(true);
+        return nodeMapper.selectCount(node);
+    }
+
+    @Override
+    public List<Node> getList() {
+        Example commentExample = new Example(Node.class);
+        commentExample.selectProperties("id","ip","countriesRegions","ports","allowWeb","flowRatio","creationTime","bandwidth");
+        commentExample.createCriteria().andEqualTo("open",true).andEqualTo("online",true);
+        return nodeMapper.selectByExample(commentExample);
+    }
+
+    @Override
+    public List<Node> getMyList(String Username) {
+        Example commentExample = new Example(Node.class);
+        commentExample.selectProperties("id","ip","open","ports","allowWeb","flowRatio","bandwidth","port");
+        commentExample.createCriteria().andEqualTo("username",Username);
+        return nodeMapper.selectByExample(commentExample);
+    }
+
+    @Override
+    public Map<Integer,Node> getNodes(List<Tunnel> list) {
+        Set<Integer> nodeIds = new HashSet<>();
+        list.forEach((t) -> {
+            nodeIds.add(t.getNodeId());
+        });
+        Example example = new Example(Node.class);
+        Example.Criteria criteria = example.createCriteria();
+        example.selectProperties("id","ip","online");
+        nodeIds.forEach((id) -> {
+            criteria.orEqualTo("id", id);
+        });
+        Map<Integer, Node> nodeMap = new HashMap<>();
+        List<Node> nodes = nodeMapper.selectByExample(example);
+        nodes.forEach(node -> nodeMap.put(node.getId(), node));
+
+        return nodeMap;
+    }
+
+    @Override
+    public List<Node> getNodesNewTunnel() {
+        Example commentExample = new Example(Node.class);
+        commentExample.selectProperties("id","countriesRegions","ports");
+        commentExample.createCriteria().andEqualTo("open",true).andEqualTo("online",true);
+        return nodeMapper.selectByExample(commentExample);
+    }
+
+    @Override
+    public String getIp(Integer id) {
+        Example commentExample = new Example(Node.class);
+        commentExample.selectProperties("ip");
+        commentExample.createCriteria().andEqualTo("id",id);
+        return nodeMapper.selectOneByExample(commentExample).getIp();
     }
 }

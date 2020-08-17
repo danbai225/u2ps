@@ -17,10 +17,10 @@ import java.util.List;
  **/
 @Service
 public class TunnelServiceImpl implements TunnelService {
-    private final NodeServiceImpl nodeService;
-    private final TunnelMapper tunnelMapper;
-    private final ClientServerImpl clientServer;
-    private final RedisTemplate redisTemplate;
+    private  NodeServiceImpl nodeService;
+    private  TunnelMapper tunnelMapper;
+    private  ClientServerImpl clientServer;
+    private  RedisTemplate redisTemplate;
 
     public TunnelServiceImpl(NodeServiceImpl nodeService, TunnelMapper tunnelMapper, ClientServerImpl clientServer, RedisTemplate redisTemplate ) {
         this.nodeService = nodeService;
@@ -32,6 +32,9 @@ public class TunnelServiceImpl implements TunnelService {
     @Override
     public List<Tunnel> getTunnelsByNodeIp(String nodeIp) {
         Node nodeByIp = nodeService.getNodeByIp(nodeIp);
+        if(nodeByIp==null){
+            return null;
+        }
         return getTunnelsByNodeId(nodeByIp.getId());
     }
 
@@ -39,7 +42,11 @@ public class TunnelServiceImpl implements TunnelService {
     public List<Tunnel> getTunnelsByNodeId(Integer id) {
         Tunnel tunnel = new Tunnel();
         tunnel.setNodeId(id);
-        return tunnelMapper.select(tunnel);
+        List<Tunnel> select = tunnelMapper.select(tunnel);
+        if(select.size()>0){
+            return select;
+        }
+        return null;
     }
 
     @Override
@@ -47,5 +54,28 @@ public class TunnelServiceImpl implements TunnelService {
         Tunnel tunnel = new Tunnel();
         tunnel.setClientId(id);
         return tunnelMapper.select(tunnel);
+    }
+
+    @Override
+    public Tunnel getById(Integer id) {
+        Tunnel tunnel = new Tunnel();
+        tunnel.setId(id);
+        return tunnelMapper.selectOne(tunnel);
+    }
+
+    @Override
+    public List<Tunnel> getTunnelsByUsername(String username) {
+        Tunnel tunnel = new Tunnel();
+        tunnel.setUsername(username);
+        return tunnelMapper.select(tunnel);
+    }
+
+    @Override
+    public void deleteTunnelByNodeIp(Integer tunnelId, String nIp) {
+        Node nodeByIp = nodeService.getNodeByIp(nIp);
+        Tunnel byId = getById(tunnelId);
+        if(nodeByIp!=null&&byId!=null){
+            tunnelMapper.delete(byId);
+        }
     }
 }

@@ -10,9 +10,8 @@
     <result column="port" jdbcType="INTEGER" property="port" />
     <result column="countries_regions" jdbcType="VARCHAR" property="countriesRegions" />
     <result column="ports" jdbcType="VARCHAR" property="ports" />
-    <result column="network_bandwidth" jdbcType="INTEGER" property="networkBandwidth" />
+    <result column="bandwidth" jdbcType="INTEGER" property="bandwidth" />
     <result column="max_tunnel" jdbcType="INTEGER" property="maxTunnel" />
-    <result column="max_tunnel_bandwidth" jdbcType="INTEGER" property="maxTunnelBandwidth" />
     <result column="allow_web" jdbcType="BIT" property="allowWeb" />
     <result column="flow_ratio" jdbcType="REAL" property="flowRatio" />
     <result column="creation_time" jdbcType="TIMESTAMP" property="creationTime" />

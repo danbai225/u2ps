@@ -31,7 +31,7 @@ public class User implements Serializable {
     /**
      * 用户流量
      */
-    private Double flow;
+    private Long flow;
 
     /**
      * 用户类型 0禁用 1未验证(未验证邮箱未认证) 2未实名认证用户 3普通用户(完成认证) 4审核员(审查) 5管理员(全部权限)
@@ -142,7 +142,7 @@ public class User implements Serializable {
      *
      * @return flow - 用户流量
      */
-    public Double getFlow() {
+    public Long getFlow() {
         return flow;
     }
 
@@ -151,7 +151,7 @@ public class User implements Serializable {
      *
      * @param flow 用户流量
      */
-    public void setFlow(Double flow) {
+    public void setFlow(Long flow) {
         this.flow = flow;
     }
 
@@ -317,7 +317,7 @@ public class User implements Serializable {
         this.loginIp = loginIp;
     }
 
-    public User(String username, String password, Double flow, Integer type, String realname, String idCard, String email, String mobile, Date registerTime, String registerIp, Date loginTime, String loginIp) {
+    public User(String username, String password, Long flow, Integer type, String realname, String idCard, String email, String mobile, Date registerTime, String registerIp, Date loginTime, String loginIp) {
         this.username = username;
         this.password = password;
         this.flow = flow;

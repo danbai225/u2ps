@@ -2,9 +2,8 @@ package cn.p00q.u2ps.controller.api.v1;
 
 import cn.p00q.u2ps.bean.Result;
 import cn.p00q.u2ps.entity.Node;
-import cn.p00q.u2ps.entity.Tunnel;
 import cn.p00q.u2ps.entity.User;
-import cn.p00q.u2ps.service.ClientServer;
+import cn.p00q.u2ps.service.ClientService;
 import cn.p00q.u2ps.service.NodeService;
 import cn.p00q.u2ps.service.TunnelService;
 import cn.p00q.u2ps.service.UserService;
@@ -29,13 +28,13 @@ public class NodeController {
     private  TunnelService tunnelService;
     private  UserService userService;
     private  NodeService nodeService;
-    private  ClientServer clientServer;
+    private ClientService clientService;
 
-    public NodeController(TunnelService tunnelService, UserService userService, NodeService nodeService, ClientServer clientServer) {
+    public NodeController(TunnelService tunnelService, UserService userService, NodeService nodeService, ClientService clientService) {
         this.tunnelService = tunnelService;
         this.userService = userService;
         this.nodeService = nodeService;
-        this.clientServer = clientServer;
+        this.clientService = clientService;
     }
     @PostMapping("/create")
     public Result create(@Validated(Node.Create.class) Node node, @NotBlank String token){

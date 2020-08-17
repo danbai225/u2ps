@@ -77,7 +77,10 @@ public class Flow {
         return this.down().down().down();
     }
     public static Long toGB(Long flow){
-        return flow/(1024*3);
+        return flow/(1024*1024*1024);
+    }
+    public static Long toMB(Long flow){
+        return flow/(1024*1024*1024);
     }
     @Override
     public String toString() {

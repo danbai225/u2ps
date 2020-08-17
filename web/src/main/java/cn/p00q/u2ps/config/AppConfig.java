@@ -1,6 +1,7 @@
 package cn.p00q.u2ps.config;
 
 import cn.p00q.u2ps.interceptor.LoginInterceptor;
+import cn.p00q.u2ps.interceptor.UserTypeInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -16,7 +17,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class AppConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/panel/**");
+        registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/panel/**").addPathPatterns("/autonym").addPathPatterns("/pay/*");
+        registry.addInterceptor(new UserTypeInterceptor()).addPathPatterns("/v1/**").excludePathPatterns("/v1/user");
     }
     @Override
     public void addCorsMappings(CorsRegistry registry) {

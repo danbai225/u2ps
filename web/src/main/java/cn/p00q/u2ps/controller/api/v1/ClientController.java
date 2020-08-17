@@ -2,10 +2,8 @@ package cn.p00q.u2ps.controller.api.v1;
 
 import cn.p00q.u2ps.bean.Result;
 import cn.p00q.u2ps.entity.Client;
-import cn.p00q.u2ps.entity.Node;
-import cn.p00q.u2ps.entity.Tunnel;
 import cn.p00q.u2ps.entity.User;
-import cn.p00q.u2ps.service.ClientServer;
+import cn.p00q.u2ps.service.ClientService;
 import cn.p00q.u2ps.service.UserService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,22 +24,22 @@ import javax.validation.constraints.NotNull;
 @Validated
 public class ClientController {
     private  UserService userService;
-    private  ClientServer clientServer;
+    private ClientService clientService;
 
-    public ClientController(UserService userService, ClientServer clientServer) {
+    public ClientController(UserService userService, ClientService clientService) {
         this.userService = userService;
-        this.clientServer = clientServer;
+        this.clientService = clientService;
     }
     @PostMapping("/update")
     public Result update(@Validated(Client.Update.class)Client client, @NotBlank String token){
         User user = userService.checkToken(token);
-        Client client1 = clientServer.getClientById(client.getId());
+        Client client1 = clientService.getClientById(client.getId());
         if(user!=null&&client1!=null){
             if(user.getUsername().equals(client1.getUsername())){
                 if(client.getSecretKey()!=null&&client.getSecretKey().equals(client1.getSecretKey())){
                     client.setSecretKey(null);
                 }
-                return clientServer.updateById(client);
+                return clientService.updateById(client);
             }
         }
         return Result.err("验证未通过,无权更新。");
@@ -49,9 +47,9 @@ public class ClientController {
     @PostMapping("/delete")
     public Result delete(@NotNull Integer id, @NotBlank String token){
         User user = userService.checkToken(token);
-        Client client1 = clientServer.getClientById(id);
+        Client client1 = clientService.getClientById(id);
         if(user!=null&&client1!=null&&client1.getUsername().equals(user.getUsername())){
-            return clientServer.delete(id)?Result.success("删除成功"):Result.err("删除失败");
+            return clientService.delete(id)?Result.success("删除成功"):Result.err("删除失败");
         }
         return Result.err("验证未通过,无权删除。");
     }
@@ -60,7 +58,7 @@ public class ClientController {
         User user = userService.checkToken(token);
         if(user!=null){
             client.setUsername(user.getUsername());
-            return clientServer.create(client);
+            return clientService.create(client);
         }
         return Result.err("验证未通过,无权创建。");
     }

@@ -13,6 +13,7 @@ import javax.validation.constraints.NotBlank;
  * @author DanBai
  */
 public class User implements Serializable {
+    public static final String RedisAuthenticationSet="RedisAuthenticationSet";
     public interface RegGroup {
     }
     public interface LoginGroup {

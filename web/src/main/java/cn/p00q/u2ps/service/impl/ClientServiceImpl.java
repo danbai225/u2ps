@@ -2,9 +2,8 @@ package cn.p00q.u2ps.service.impl;
 
 import cn.p00q.u2ps.bean.Result;
 import cn.p00q.u2ps.entity.Client;
-import cn.p00q.u2ps.entity.Node;
 import cn.p00q.u2ps.mapper.ClientMapper;
-import cn.p00q.u2ps.service.ClientServer;
+import cn.p00q.u2ps.service.ClientService;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
@@ -19,10 +18,10 @@ import java.util.UUID;
  * @create: 2020-08-04 22:01
  **/
 @Service
-public class ClientServerImpl implements ClientServer {
+public class ClientServiceImpl implements ClientService {
     private  ClientMapper clientMapper;
 
-    public ClientServerImpl(ClientMapper clientMapper) {
+    public ClientServiceImpl(ClientMapper clientMapper) {
         this.clientMapper = clientMapper;
     }
 

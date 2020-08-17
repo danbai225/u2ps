@@ -30,14 +30,14 @@ public class TunnelController {
     private  TunnelService tunnelService;
     private  UserService userService;
     private  NodeService nodeService;
-    private  ClientServer clientServer;
+    private ClientService clientService;
     @Reference
     private PsService psService;
-    public TunnelController(TunnelService tunnelService, UserService userService, NodeService nodeService, ClientServer clientServer) {
+    public TunnelController(TunnelService tunnelService, UserService userService, NodeService nodeService, ClientService clientService) {
         this.tunnelService = tunnelService;
         this.userService = userService;
         this.nodeService = nodeService;
-        this.clientServer = clientServer;
+        this.clientService = clientService;
     }
 
     @PostMapping("/update")

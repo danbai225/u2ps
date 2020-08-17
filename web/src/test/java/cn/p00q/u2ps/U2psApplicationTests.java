@@ -2,7 +2,7 @@ package cn.p00q.u2ps;
 
 import cn.p00q.u2ps.entity.Node;
 import cn.p00q.u2ps.entity.Tunnel;
-import cn.p00q.u2ps.service.impl.ClientServerImpl;
+import cn.p00q.u2ps.service.impl.ClientServiceImpl;
 import cn.p00q.u2ps.service.impl.NodeServiceImpl;
 import cn.p00q.u2ps.service.impl.TunnelServiceImpl;
 import cn.p00q.u2ps.utils.IpUtils;
@@ -21,7 +21,7 @@ class U2psApplicationTests {
     @Autowired
     NodeServiceImpl nodeService;
     @Autowired
-    ClientServerImpl clientServer;
+    ClientServiceImpl clientServer;
     @Test
     void contextLoads() {
     }

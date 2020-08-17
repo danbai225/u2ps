@@ -1,5 +1,6 @@
 package cn.p00q.u2ps.controller.api.v1;
 
+import cn.p00q.u2ps.bean.Flow;
 import cn.p00q.u2ps.bean.Result;
 import cn.p00q.u2ps.entity.User;
 import cn.p00q.u2ps.service.UserService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotBlank;
 
 /**
  * @program: u2ps
@@ -48,5 +50,29 @@ public class UserController {
             return Result.success("验证成功");
         }
         return Result.err("此验证连接已经失效");
+    }
+    @PostMapping("/signReward")
+    public Result signReward(@NotBlank String token){
+        User user = userService.checkToken(token);
+        if(user!=null){
+            Integer integer = userService.signReward(user.getUsername());
+            if (integer<0){
+                return Result.err("已经签到过了。");
+            }
+            return Result.success("签到成功,获得流量:"+integer+"MB",integer);
+        }
+        return Result.err("验证未通过,无权签到。");
+    }
+    @PostMapping("/cdKey")
+    public Result cdKey(@NotBlank String token,@NotBlank String cdkey){
+        User user = userService.checkToken(token);
+        if(user!=null){
+            Integer integer = userService.cdKey(user.getUsername(),cdkey);
+            if (integer<0){
+                return Result.err("该兑换码无效!");
+            }
+            return Result.success("兑换成功,获得流量:"+integer+"MB",integer);
+        }
+        return Result.err("验证未通过,无权兑换。");
     }
 }

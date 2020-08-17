@@ -1,9 +1,12 @@
 package cn.p00q.u2ps.service.impl;
 
+import cn.p00q.u2ps.bean.Flow;
 import cn.p00q.u2ps.bean.Result;
 import cn.p00q.u2ps.entity.User;
 import cn.p00q.u2ps.mapper.UserMapper;
 import cn.p00q.u2ps.service.UserService;
+import cn.p00q.u2ps.utils.AutonymUtils;
+import cn.p00q.u2ps.utils.DateUtils;
 import cn.p00q.u2ps.utils.EmailUtil;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -13,11 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 import tk.mybatis.mapper.entity.Example;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,6 +34,10 @@ public class UserServiceImpl implements UserService {
     private static final String REDIS_VALIDATE_EMAIL_PREFIX = "validateEmail_";
     private static final String REDIS_USER_NEW_PASS_PREFIX="Password_";
     private static final String TOKEN_PREFIX = "token_";
+    private static final String CD_KEY_PREFIX = "cdKey_";
+    private static final String SignReward_PREFIX="SignReward_";
+    public static final Integer MinSignRewardFlow=10;
+    public static final Integer MaxSignRewardFlow=1024;
     private  UserMapper userMapper;
     private  RedisTemplate redisTemplate;
     private  EmailUtil emailUtil;
@@ -193,5 +198,92 @@ public class UserServiceImpl implements UserService {
     @Override
     public String getToken(String username) {
         return (String) redisTemplate.opsForValue().get(TOKEN_PREFIX + username);
+    }
+
+    @Override
+    public Integer signReward(String username) {
+        //查询用户是否签到
+        try {
+            if(!redisTemplate.opsForSet().isMember(SignReward_PREFIX+ DateUtils.dateFormat(new Date(), DateUtils.DATE_PATTERN),username)){
+                redisTemplate.opsForSet().add(SignReward_PREFIX+ DateUtils.dateFormat(new Date(), DateUtils.DATE_PATTERN),username);
+                Integer minSignRewardFlow = (Integer) redisTemplate.opsForValue().get("MinSignRewardFlow");
+                Integer maxSignRewardFlow = (Integer) redisTemplate.opsForValue().get("MaxSignRewardFlow");
+                if(minSignRewardFlow==null){
+                    minSignRewardFlow=MinSignRewardFlow;
+                }
+                if(maxSignRewardFlow==null){
+                    maxSignRewardFlow=MaxSignRewardFlow;
+                }
+                Integer flow=(int)(new Random().nextFloat()*maxSignRewardFlow);
+                if(flow<minSignRewardFlow){
+                    flow=minSignRewardFlow;
+                }
+                userMapper.addFlowByUsername(username, flow*(1024*1024));
+                return flow;
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    @Override
+    public Boolean isSignReward(String username) {
+        //查询用户是否签到
+        try {
+            if(!redisTemplate.opsForSet().isMember(SignReward_PREFIX+ DateUtils.dateFormat(new Date(), DateUtils.DATE_PATTERN),username)){
+                return false;
+            }
+            return true;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    @Override
+    public Integer cdKey(String username, String cdKey) {
+        Integer flow = (Integer) redisTemplate.opsForValue().get(CD_KEY_PREFIX + cdKey);
+        if(flow!=null){
+            redisTemplate.delete(CD_KEY_PREFIX + cdKey);
+            userMapper.addFlowByUsername(username, flow*(1024*1024));
+            return flow;
+        }
+        return -1;
+    }
+
+    @Override
+    public void addCdKey(String cdKey, Integer flow) {
+        if(redisTemplate.opsForValue().get(CD_KEY_PREFIX + cdKey)==null){
+            redisTemplate.opsForValue().set(CD_KEY_PREFIX + cdKey,flow);
+        }
+    }
+
+    @Override
+    public Result autonym(String realname, String idCard, String mobile, String username) {
+        //认证
+        if(AutonymUtils.Autonym(realname, idCard, mobile)){
+            //成功
+            User userByUsername = getUserByUsername(username);
+            userByUsername.setRealname(realname);
+            userByUsername.setIdCard(idCard);
+            userByUsername.setMobile(mobile);
+            //更改用户类型
+            if(userByUsername.getType()==3){
+                Map<String, Object> stringObjectMap = new HashMap<>(4);
+                stringObjectMap.put("yuan", userByUsername);
+                stringObjectMap.put("realname",realname);
+                stringObjectMap.put("idCard",idCard);
+                stringObjectMap.put("mobile",mobile);
+                redisTemplate.opsForValue().set("GGRZ_"+userByUsername.getUsername(), stringObjectMap);
+                return Result.success("不能更改实名认证!");
+            }
+            userByUsername.setType(3);
+            if(userMapper.updateByPrimaryKey(userByUsername)>0){
+                return Result.success("认证成功!");
+            }
+            return Result.success("认证成功,但更新失败请联系站长或重试!");
+        }
+        return Result.err("认证失败");
     }
 }

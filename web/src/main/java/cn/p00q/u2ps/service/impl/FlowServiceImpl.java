@@ -6,7 +6,6 @@ import cn.p00q.u2ps.entity.Node;
 import cn.p00q.u2ps.entity.Tunnel;
 import cn.p00q.u2ps.service.FlowService;
 import cn.p00q.u2ps.utils.DateUtils;
-import javassist.expr.NewArray;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 

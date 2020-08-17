@@ -16,6 +16,6 @@ public interface UserMapper extends MyMapper<User> {
      * @param userId
      * @param flow
      */
-    @Update("UPDATE `user` SET `flow` = '#{flow}' WHERE `user`.`id` = #{id};")
+    @Update("UPDATE `user` SET `flow` = #{flow} WHERE `user`.`id` = #{id};")
     void updateFlow(@Param("id") Integer userId,@Param("flow")Long flow);
 }

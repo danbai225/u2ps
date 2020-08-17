@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<!--suppress ALL-->
+<html lang="zh-CN" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>U2PS | 实名认证</title>
+    <!-- 告诉浏览器屏幕自适应 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Font Awesome -->
+    <link href="https://cdn.staticfile.org/font-awesome/5.14.0/css/all.css" rel="stylesheet">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://cdn.staticfile.org/ionicons/5.1.2/collection/components/icon/icon.min.css">
+    <!-- 主题样式 -->
+    <link href="https://cdn.staticfile.org/admin-lte/3.0.5/css/adminlte.min.css" rel="stylesheet">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="https://cdn.staticfile.org/overlayscrollbars/1.13.0/css/OverlayScrollbars.min.css">
+    <!-- 离线 Google 字体: Source Sans Pro -->
+    <link href="/css/google.css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+</head>
+<body class="register-page" style="min-height: 586.391px;">
+<div>
+    <h2>U2PS | 实名认证</h2>
+    <p>认证前先支付认证费用0.5元.</p>
+    <a href="/pay/authentication?payType=1" type="button" class="btn btn-block btn-outline-primary">支付宝</a>
+    <a href="/pay/authentication?payType=2" type="button" class="btn btn-block btn-outline-primary">微信</a>
+</div>
+<div style="width: 33%;min-width: 300px;">
+    <form id="rz" role="form" method="post">
+        <div class="card-body">
+            <div class="form-group">
+                <label>真实姓名:</label>
+                <input type="text" class="form-control" placeholder="请输入真实姓名" name="realname">
+            </div>
+            <div class="form-group">
+                <label>身份证号码:</label>
+                <input type="text" class="form-control" placeholder="请输入身份证号码" name="idCard">
+            </div>
+            <div class="form-group">
+                <label>手机号:</label>
+                <input type="text" id="mobile" class="form-control" placeholder="请输入手机号码,最好是支付宝的号码" name="mobile">
+            </div>
+            <div class="form-group">
+                <label>获取验证码(先输入手机号):</label>
+                <!-- 点击式按钮建议高度介于36px与46px  -->
+                <div id="vaptchaContainer" style="width: 300px;height: 36px;">
+                    <!--vaptcha-container是用来引入VAPTCHA的容器，下面代码为预加载动画，仅供参考-->
+                    <div class="vaptcha-init-main">
+                        <div class="vaptcha-init-loading">
+                            <a href="/" target="_blank">
+                                <img src="https://r.vaptcha.net/public/img/vaptcha-loading.gif" />
+                            </a>
+                            <span class="vaptcha-text">Vaptcha启动中...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>短信验证码:</label>
+                <input type="text" class="form-control" placeholder="请输入短信验证码" name="code">
+            </div>
+            <div class="form-check">
+                <input id="check" class="form-check-input" type="checkbox" name="check">
+                <label>我承诺身份信息真实:</label>
+            </div>
+        </div>
+        <!-- /.card-body -->
+        <div>
+            <button onclick="post()" type="button" class="btn btn-primary float-right">认证</button>
+        </div>
+    </form>
+</div>
+
+
+<!-- jQuery -->
+<!-- jQuery -->
+<script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Bootstrap 4 -->
+<script src="https://cdn.staticfile.org/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- overlayScrollbars -->
+<script src="https://cdn.staticfile.org/overlayscrollbars/1.13.0/js/jquery.overlayScrollbars.min.js"></script>
+<!-- AdminLTE App -->
+<script src="https://cdn.staticfile.org/admin-lte/3.0.5/js/adminlte.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-validate/1.19.2/jquery.validate.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery-validate/1.19.2/localization/messages_zh.min.js"></script>
+<script src="js/card.js"></script>
+<script src="https://v.vaptcha.com/v3.js"></script>
+<style>
+    .vaptcha-init-main {
+        display: table;
+        width: 100%;
+        height: 100%;
+        background-color: #eeeeee;
+    }
+    ​
+    .vaptcha-init-loading {
+        display: table-cell;
+        vertical-align: middle;
+        text-align: center;
+    }
+    ​
+    .vaptcha-init-loading > a {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: none;
+    }
+    ​
+    .vaptcha-init-loading > a img {
+        vertical-align: middle;
+    }
+    ​
+    .vaptcha-init-loading .vaptcha-text {
+        font-family: sans-serif;
+        font-size: 12px;
+        color: #cccccc;
+        vertical-align: middle;
+    }
+</style>
+<script th:inline="javascript">
+    // 身份证号码验证
+    jQuery.validator.addMethod("isIdCardNo", function(value, element) {
+        return this.optional(element) || idCardNoUtil.checkIdCardNo(value);
+    }, "请正确输入您的身份证号码");
+    // 手机号码验证
+    jQuery.validator.addMethod("isMobile", function(value, element) {
+        var length = value.length;
+        var mobile = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1})|(17[0-9]{1}))+\d{8})$/;
+        return this.optional(element) || (length == 11 && mobile.test(value));
+    }, "请正确填写您的手机号码");
+    $("#rz").validate({
+        rules: {
+            realname: {required: true},
+            idCard: {required: true, isIdCardNo:true},
+            mobile: {required: true, isMobile: true},
+            check: {required: true},
+            code: {required: true},
+            nodeId: {required: true},
+        }
+    })
+
+    function post() {
+        if (!$("#rz").valid()) {
+            return;
+        }
+        $.ajax({
+            //几个参数需要注意一下
+            type: "POST",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            url: "/autonym",//url
+            data: $('#rz').serialize(),
+            success: function (result) {
+                $(document).Toasts('create', {
+                    class: 'bg-info',
+                    title: '消息提醒',
+                    subtitle: '-U2PS',
+                    body: result.msg
+                })
+            }
+        });
+    }
+    $(function () {
+        vaptcha({
+            vid: "5f33dfe11273afe27016d595", // 验证单元id
+            type: "click", // 显示类型 点击式
+            scene: 0, // 场景值 默认0
+            container: "#vaptchaContainer", // 容器，可为Element 或者 selector
+            offline_server: "127.0.0.1.2252", //离线模式服务端地址，若尚未配置离线模式，请填写任意地址即可。
+            //可选参数
+            //lang: 'auto', // 语言 默认auto,可选值auto,zh-CN,en,zh-TW,jp
+            //https: true, // 使用https 默认 true
+            //style: 'dark' //按钮样式 默认dark，可选值 dark,light
+            //color: '#57ABFF' //按钮颜色 默认值#57ABFF
+        }).then(function (vaptchaObj) {
+            obj = vaptchaObj; //将VAPTCHA验证实例保存到局部变量中
+            vaptchaObj.render(); // 调用验证实例 vpObj 的 render 方法加载验证按钮
+            vaptchaObj.listen("pass", function () {
+                // 验证成功进行后续操作
+                var mobiler = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1})|(17[0-9]{1}))+\d{8})$/;
+                var mobile=$("#mobile").val()
+                if(mobile.length==11&&mobiler.test(mobile)){
+                    var data = {
+                        mobile:mobile,
+                        token: vaptchaObj.getToken(),
+                    };
+                    $.post("/mobileYzm", data, function (r) {
+                        $(document).Toasts('create', {
+                            class: 'bg-info',
+                            title: '消息提醒',
+                            subtitle: '-U2PS',
+                            body: r.msg
+                        })
+
+                    });
+                }else {
+                    $(document).Toasts('create', {
+                        class: 'bg-info',
+                        title: '消息提醒',
+                        subtitle: '-U2PS',
+                        body: "请输入正确的手机号"
+                    })
+                }
+
+            });
+        });
+    })
+
+</script>
+</body>
+</html>

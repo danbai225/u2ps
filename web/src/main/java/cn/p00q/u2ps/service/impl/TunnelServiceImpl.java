@@ -4,7 +4,6 @@ import cn.p00q.u2ps.bean.Result;
 import cn.p00q.u2ps.entity.Client;
 import cn.p00q.u2ps.entity.Node;
 import cn.p00q.u2ps.entity.Tunnel;
-import cn.p00q.u2ps.entity.User;
 import cn.p00q.u2ps.mapper.TunnelMapper;
 import cn.p00q.u2ps.service.PsService;
 import cn.p00q.u2ps.service.TunnelService;
@@ -28,14 +27,14 @@ import java.util.List;
 public class TunnelServiceImpl implements TunnelService {
     private  NodeServiceImpl nodeService;
     private  TunnelMapper tunnelMapper;
-    private  ClientServerImpl clientServer;
+    private ClientServiceImpl clientServer;
     private  RedisTemplate redisTemplate;
     private  UserService userService;
     @Reference
     PsService psService;
 
 
-    public TunnelServiceImpl(NodeServiceImpl nodeService, TunnelMapper tunnelMapper, ClientServerImpl clientServer, RedisTemplate redisTemplate, UserService userService) {
+    public TunnelServiceImpl(NodeServiceImpl nodeService, TunnelMapper tunnelMapper, ClientServiceImpl clientServer, RedisTemplate redisTemplate, UserService userService) {
         this.nodeService = nodeService;
         this.tunnelMapper = tunnelMapper;
         this.clientServer = clientServer;

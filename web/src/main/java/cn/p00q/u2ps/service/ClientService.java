@@ -11,7 +11,7 @@ import java.util.List;
  * @author: DanBai
  * @create: 2020-08-04 21:59
  **/
-public interface ClientServer {
+public interface ClientService {
     /**
      * 根据Key 获取客户端
      * @param key key

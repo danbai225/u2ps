@@ -2,20 +2,18 @@ package cn.p00q.u2ps.controller.view;
 
 import cn.p00q.u2ps.bean.Result;
 import cn.p00q.u2ps.entity.User;
-import cn.p00q.u2ps.service.PsService;
+
 import cn.p00q.u2ps.service.UserService;
 import cn.p00q.u2ps.utils.IpUtils;
 import cn.p00q.u2ps.utils.Vaptcha;
-import com.alibaba.dubbo.config.annotation.Reference;
+import cn.p00q.u2ps.utils.yzmUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -23,8 +21,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-
 /**
  * @program: u2ps
  * @description: 主要视图
@@ -34,9 +30,12 @@ import javax.validation.constraints.NotEmpty;
 @Controller
 @Validated
 public class MainView {
-    private final UserService userService;
-    public MainView(UserService userService) {
+    private  UserService userService;
+    private RedisTemplate redisTemplate;
+
+    public MainView(UserService userService, RedisTemplate redisTemplate) {
         this.userService = userService;
+        this.redisTemplate = redisTemplate;
     }
 
     @GetMapping(value = {"/index","","/"})
@@ -104,4 +103,15 @@ public class MainView {
         }
         return "forgot-password";
     }
+    @GetMapping("/loginOut")
+    public String loginOut(HttpServletRequest request){
+        request.getSession().removeAttribute("Token");
+        request.getSession().removeAttribute(User.class.getSimpleName());
+        return "redirect:/index";
+    }
+    @GetMapping("/autonym")
+    public String autonym(){
+        return "/autonym";
+    }
+
 }

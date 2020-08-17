@@ -122,10 +122,22 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-item has-treeview">
-                        <a href="/panel/index" class="nav-link">
+                    <li class="nav-item has-treeview" th:if="${session.User.type<3}">
+                        <a href="/autonym" class="nav-link">
                             <i class="nav-icon fas fa-user-circle"></i>
-                            <p>个人信息</p>
+                            <p>实名认证</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-toggle="modal" data-target="#modal-sm">
+                            <i class="nav-icon fas fa-barcode"></i>
+                            <p>兑换码</p>
+                        </a>
+                    </li>
+                    <li class="nav-item has-treeview">
+                        <a href="/loginOut" class="nav-link">
+                            <i class="nav-icon fas fa-reply-all"></i>
+                            <p>退出登录</p>
                         </a>
                     </li>
                 </ul>
@@ -134,6 +146,32 @@
         </div>
         <!-- /.sidebar -->
     </aside>
+    <!--弹窗-->
+    <div class="modal fade" id="modal-sm">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">兑换弹窗</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>兑换码:</label>
+                        <input type="text" class="form-control" id="cdkey" placeholder="请输入兑换码">
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button onclick="duihuan()" type="button" class="btn btn-primary">兑换</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!--弹窗end-->
 
     <!-- Content Wrapper. 包含页面内容 -->
     <div class="content-wrapper">
@@ -257,6 +295,30 @@
 <script src="https://cdn.staticfile.org/jquery-validate/1.19.2/jquery.validate.min.js"></script>
 <script src="https://cdn.staticfile.org/jquery-validate/1.19.2/localization/messages_zh.min.js"></script>
 <script th:inline="javascript">
+    /*<![CDATA[*/
+    var token = /*[[${session.Token}]]*/ null;
+    /*]]>*/
+    function duihuan(){
+        var cdkey = $("#cdkey").val();
+        if (cdkey.length<1){
+            return
+        }
+        $.ajax({
+            //几个参数需要注意一下
+            type: "POST",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            url: "/v1/user/cdKey" ,//url
+            data: {token:token,cdkey:cdkey},
+            success: function (result) {
+                $(document).Toasts('create', {
+                    class: 'bg-info',
+                    title: '消息提醒',
+                    subtitle: '-U2PS',
+                    body: result.msg
+                })
+            }
+        });
+    }
     $('#servicePort').on('input',function(e){
         $("#checkPort").prop("checked",false);
     });

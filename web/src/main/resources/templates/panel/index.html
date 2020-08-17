@@ -131,10 +131,22 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-item has-treeview">
-                        <a href="/panel/index" class="nav-link">
+                    <li class="nav-item has-treeview" th:if="${User.type<3}">
+                        <a href="/autonym" class="nav-link">
                             <i class="nav-icon fas fa-user-circle"></i>
-                            <p>个人信息</p>
+                            <p>实名认证</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-toggle="modal" data-target="#modal-sm">
+                            <i class="nav-icon fas fa-barcode"></i>
+                            <p>兑换码</p>
+                        </a>
+                    </li>
+                    <li class="nav-item has-treeview">
+                        <a href="/loginOut" class="nav-link">
+                            <i class="nav-icon fas fa-reply-all"></i>
+                            <p>退出登录</p>
                         </a>
                     </li>
                 </ul>
@@ -143,6 +155,32 @@
         </div>
         <!-- /.sidebar -->
     </aside>
+    <!--弹窗-->
+    <div class="modal fade" id="modal-sm">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">兑换弹窗</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>兑换码:</label>
+                        <input type="text" class="form-control" id="cdkey" placeholder="请输入兑换码">
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button onclick="duihuan()" type="button" class="btn btn-primary">兑换</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!--弹窗end-->
 
     <!-- Content Wrapper. 包含页面内容 -->
     <div class="content-wrapper">
@@ -230,7 +268,7 @@
                                 </tr>
                                 <tr>
                                     <td style="width: 10%;"><b>剩余流量:</b></td>
-                                    <td th:text="${#numbers.formatDecimal(User.flow/1024.0/1024.0/1024.0,0,2)+'GB'}">3.181 GB</td>
+                                    <td th:text="${User.flow>524288000?#numbers.formatDecimal(User.flow/1024.0/1024.0/1024,1,2)+'GB':#numbers.formatDecimal(User.flow/1024.0/1024.0,1,1)+'MB'}">3.181 GB</td>
                                 </tr>
                                 <tr>
                                     <td style="width: 10%;"><b>隧道数量:</b></td>
@@ -239,6 +277,10 @@
                                 <tr>
                                     <td style="width: 10%;"><b>隧道限速:</b></td>
                                     <td>不限速(基于节点带宽)</td>
+                                </tr>
+                                <tr th:if="${!SignReward}" id="qiandao">
+                                    <td style="width: 10%;"><b>签到:</b></td>
+                                    <td><button type="button" style="width: 100px" onclick="qiandao()" class="btn btn-block bg-gradient-primary">签到</button></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -273,7 +315,6 @@
                                 <div class="position-relative mb-4">
                                     <canvas id="userFlow" height="200"></canvas>
                                 </div>
-
                             </div>
                         </div>
                         <!-- /.card -->
@@ -349,6 +390,30 @@
 <!-- AdminLTE App -->
 <script src="https://cdn.staticfile.org/admin-lte/3.0.5/js/adminlte.min.js"></script>
 <script th:inline="javascript">
+    /*<![CDATA[*/
+    var token = /*[[${session.Token}]]*/ null;
+    /*]]>*/
+    function duihuan(){
+        var cdkey = $("#cdkey").val();
+        if (cdkey.length<1){
+            return
+        }
+        $.ajax({
+            //几个参数需要注意一下
+            type: "POST",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            url: "/v1/user/cdKey" ,//url
+            data: {token:token,cdkey:cdkey},
+            success: function (result) {
+                $(document).Toasts('create', {
+                    class: 'bg-info',
+                    title: '消息提醒',
+                    subtitle: '-U2PS',
+                    body: result.msg
+                })
+            }
+        });
+    }
     function getFields(input, field) {
         var output = [];
         for (var i=0; i < input.length ; ++i)
@@ -365,6 +430,25 @@
     var Count30val = getFields(Count30Flow, "val");
     var Count30UP = getFields(Count30val, "up");
     var Count30Down = getFields(Count30val, "down");
+    function qiandao(){
+        $.ajax({
+            //几个参数需要注意一下
+            type: "POST",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            url: "/v1/user/signReward" ,//url
+            data: {token:token},
+            success: function (result) {
+                $("#qiandao").remove();
+                $(document).Toasts('create', {
+                    class: 'bg-info',
+                    title: '消息提醒',
+                    subtitle: '-U2PS',
+                    body: result.msg
+                })
+            }
+        });
+    }
+
     $(function () {
         var ticksStyle = {
             fontColor: '#495057',

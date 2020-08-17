@@ -6,7 +6,7 @@ import cn.p00q.u2ps.entity.Node;
 import cn.p00q.u2ps.entity.Tunnel;
 import cn.p00q.u2ps.mapper.NodeMapper;
 import cn.p00q.u2ps.mapper.TunnelMapper;
-import cn.p00q.u2ps.service.ClientServer;
+import cn.p00q.u2ps.service.ClientService;
 import cn.p00q.u2ps.service.NodeService;
 import cn.p00q.u2ps.service.PsService;
 import cn.p00q.u2ps.utils.IpUtils;
@@ -26,14 +26,14 @@ import java.util.*;
 @Service
 public class NodeServiceImpl implements NodeService {
     private  NodeMapper nodeMapper;
-    private  ClientServer clientServer;
+    private ClientService clientService;
     private TunnelMapper tunnelMapper;
     @Reference
     PsService psService;
 
-    public NodeServiceImpl(NodeMapper nodeMapper, ClientServer clientServer, TunnelMapper tunnelMapper) {
+    public NodeServiceImpl(NodeMapper nodeMapper, ClientService clientService, TunnelMapper tunnelMapper) {
         this.nodeMapper = nodeMapper;
-        this.clientServer = clientServer;
+        this.clientService = clientService;
         this.tunnelMapper = tunnelMapper;
     }
 
@@ -145,7 +145,7 @@ public class NodeServiceImpl implements NodeService {
             Node nowNode = getNodeById(node.getId());
             //客户端更新
             if (!nodeById.getPort().equals(node.getPort())) {
-                List<Client> clientsByIp = clientServer.getClientsByIp(node.getIp());
+                List<Client> clientsByIp = clientService.getClientsByIp(node.getIp());
                 clientsByIp.forEach(client -> {
                     new Thread(() -> {
                         psService.updateNodeToC(client.getId(),nowNode);

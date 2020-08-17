@@ -3,6 +3,8 @@ package cn.p00q.u2ps.service;
 import cn.p00q.u2ps.bean.Result;
 import cn.p00q.u2ps.entity.User;
 
+import javax.validation.constraints.NotBlank;
+
 /**
  * @program: u2ps
  * @description: User服务接口
@@ -83,4 +85,43 @@ public interface UserService {
      * @return
      */
     String getToken(String username);
+
+    /**
+     * 签到
+     * @param username
+     * @return 返回前端所得流量MB
+     */
+    Integer signReward(String username);
+
+    /**
+     * 查询是否签到
+     * @param username
+     * @return
+     */
+    Boolean isSignReward(String username);
+
+    /**
+     * 兑换 兑换码
+     * @param username
+     * @param cdKey
+     * @return
+     */
+    Integer cdKey(String username,String cdKey);
+
+    /**
+     * 增加key 流量单位mb
+     * @param cdKey
+     * @param flow
+     */
+    void addCdKey(String cdKey,Integer flow);
+
+    /**
+     * 用户实名认证
+     * @param realname
+     * @param idCard
+     * @param mobile
+     * @param username
+     * @return
+     */
+    Result autonym(String realname,String idCard,String mobile,String username);
 }

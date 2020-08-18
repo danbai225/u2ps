@@ -66,7 +66,7 @@ public class FlowServiceImpl implements FlowService {
                 String strDate = DateUtils.dateFormat(rdate, DateUtils.DATE_PATTERN);
                 Integer flow = (Integer) redisTemplate.opsForValue().get(Flow.UserFlowToDayPrefix +username+strDate);
                 if(flow!=null){
-                    list.add(new DateVal(strDate, flow/1024/1024));
+                    list.add(new DateVal(strDate, flow/1024));
                 }else {
                     list.add(new DateVal(strDate, 0));
                 }

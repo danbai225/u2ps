@@ -124,7 +124,7 @@ public class NodeServiceImpl implements NodeService {
     public Result updateById(Node node) {
         Node nodeById = getNodeById(node.getId());
         if (node.getPort() != null&&!nodeById.getPort().equals(node.getPort())) {
-            if (psService.isNodePortUse(nodeById.getIp(), node.getPort())) {
+            if (nodeById.getOnline()&&psService.isNodePortUse(nodeById.getIp(), node.getPort())) {
                 return Result.err("服务端口被占用,请尝试换一个端口");
             }
         }

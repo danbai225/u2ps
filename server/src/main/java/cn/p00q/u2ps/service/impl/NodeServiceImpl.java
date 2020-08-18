@@ -70,6 +70,4 @@ public class NodeServiceImpl implements NodeService {
         node.setId(id);
         return nodeMapper.selectOne(node);
     }
-
-
 }

@@ -129,5 +129,13 @@ public class Msg{
      * 发现tcp web站点
      */
     public static final String TcpWeb="TcpWeb";
+    /**
+     * 心跳
+     */
+    public static final String Heartbeat="Heartbeat";
+    /**
+     * 节点上线
+     */
+    public static final String NodeOnline="NodeOnline";
 
 }

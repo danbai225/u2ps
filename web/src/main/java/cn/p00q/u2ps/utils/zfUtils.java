@@ -13,6 +13,7 @@ import java.text.DecimalFormat;
  * @create: 2020-08-17 14:36
  **/
 public class zfUtils {
+    private static String DoMain="https://u2ps.com";
     private static int pid=672;
     private static String token="971FCD18696CAA771936FE78807A3C61";
     private static String NoticeKey ="BB986363E96E0480E6A20FE20B69136F";
@@ -45,6 +46,6 @@ public class zfUtils {
         return null;
     }
     public static String getUrl(Pay pay){
-        return getZFUrl(pay.getId(), pay.getFee(), pay.getCreationtime().getTime(), pay.getPaytype(), "http://127.0.0.1:2252/pay/callBack", "http://127.0.0.1:2252/pay/cancel","http://127.0.0.1:2252/pay/callBack","U2PS");
+        return getZFUrl(pay.getId(), pay.getFee(), pay.getCreationtime().getTime(), pay.getPaytype(), DoMain+"/pay/callBack", DoMain+"/pay/cancel",DoMain+"/pay/callBack","U2PS");
     }
 }

@@ -6,6 +6,8 @@ import cn.p00q.u2ps.utils.IpUtils;
 import cn.p00q.u2ps.utils.SpringUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ExecutorService;
@@ -58,6 +60,7 @@ public class PsServerHandler extends ChannelInboundHandlerAdapter {
                             .add(()->psServer.isNodePortUse(msgObject),Msg.IsPortUse)
                             .add(()->psServer.updateFlow(msgObject),Msg.UpdateFlow)
                             .add(()->psServer.TcpWeb(ctx,msgObject),Msg.TcpWeb)
+                            .add(()->psServer.Heartbeat(msgObject),Msg.Heartbeat)
                             .Default(()->{log.info(msgObject.toString());})
                             .execute(msgObject.getType());
                 });
@@ -86,6 +89,22 @@ public class PsServerHandler extends ChannelInboundHandlerAdapter {
             log.error(e.getMessage());
             e.printStackTrace();
         }
+    }
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        //超时事件
+        if (evt instanceof IdleStateEvent) {
+            log.error("连接超时: {}", IpUtils.GetIPByCtx(ctx));
+            IdleStateEvent idleEvent = (IdleStateEvent) evt;
+            if (idleEvent.state() == IdleState.READER_IDLE) {
+                PsServiceImpl psServer = SpringUtil.getBean(PsServiceImpl.class);
+                if (psServer != null) {
+                    psServer.disconnect(ctx);
+                }
+                ctx.channel().close();
+            }
+        }
+        super.userEventTriggered(ctx, evt);
     }
 }
 

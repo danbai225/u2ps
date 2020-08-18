@@ -17,8 +17,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class AppConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/panel/**").addPathPatterns("/autonym").addPathPatterns("/pay/*");
-        registry.addInterceptor(new UserTypeInterceptor()).addPathPatterns("/v1/**").excludePathPatterns("/v1/user");
+        registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/panel/**").addPathPatterns("/autonym").addPathPatterns("/pay/**");
+        registry.addInterceptor(new UserTypeInterceptor()).addPathPatterns("/v1/**").excludePathPatterns("/v1/user/**");
     }
     @Override
     public void addCorsMappings(CorsRegistry registry) {

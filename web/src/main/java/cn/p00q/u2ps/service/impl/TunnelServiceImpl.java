@@ -105,7 +105,7 @@ public class TunnelServiceImpl implements TunnelService {
                 return Result.err("服务端口被占用,请尝试换一个端口");
             }
             //询问端口是否可以使用(是否占用)
-            if (psService.isNodePortUse(nodeById.getIp(), tunnel.getServicePort())) {
+            if (nodeById.getOnline()&&psService.isNodePortUse(nodeById.getIp(), tunnel.getServicePort())) {
                 return Result.err("服务端口被占用,请尝试换一个端口");
             }
         }
@@ -160,7 +160,7 @@ public class TunnelServiceImpl implements TunnelService {
                     return Result.err("服务端口被占用,请尝试换一个端口");
                 }
                 //询问端口是否可以使用(是否占用)
-                if (psService.isNodePortUse(node.getIp(), tunnel.getServicePort())) {
+                if (node.getOnline()&&psService.isNodePortUse(node.getIp(), tunnel.getServicePort())) {
                     return Result.err("服务端口被占用,请尝试换一个端口");
                 }
                 //隧道类型

@@ -52,6 +52,9 @@ public class UserServiceImpl implements UserService {
     public String login(User user) {
         User dataBaseUser = getUserByUsername(user.getUsername());
         if (dataBaseUser != null) {
+            if(dataBaseUser.getType().equals(1)){
+                return "1";
+            }
             //加密验证
             if (dataBaseUser.getPassword().equals(DigestUtils.md5DigestAsHex((user.getUsername() + user.getPassword()).getBytes()))) {
                 dataBaseUser.setLoginIp(user.getLoginIp());
@@ -105,16 +108,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public Result reg(User user) {
         User dataBaseUser = getUserByUsername(user.getUsername());
-        if (dataBaseUser != null&&!dataBaseUser.getType().equals(1)) {
-            return Result.err("存在相同用户名的用户");
+        if (dataBaseUser !=null) {
+            if(!dataBaseUser.getType().equals(1)){
+                return Result.err("存在相同用户名的用户");
+            }else {
+                userMapper.delete(dataBaseUser);
+            }
         }
-        if(dataBaseUser.getType().equals(1)){
-            userMapper.delete(dataBaseUser);
-        }
+
         User userEmail = new User();
         userEmail.setEmail(user.getEmail());
         User dataBaseUser1 = userMapper.selectOne(userEmail);
-        if (dataBaseUser1 != null&&dataBaseUser != null&&!dataBaseUser.getUsername().equals(dataBaseUser1.getUsername())) {
+        if (dataBaseUser1 != null&&!dataBaseUser.getUsername().equals(dataBaseUser1.getUsername())) {
             return Result.err("邮箱已被使用");
         }
         //密码加密
@@ -218,7 +223,7 @@ public class UserServiceImpl implements UserService {
                 if(flow<minSignRewardFlow){
                     flow=minSignRewardFlow;
                 }
-                userMapper.addFlowByUsername(username, flow*(1024*1024));
+                userMapper.addFlowByUsername(username, new Long(flow)*(1024*1024));
                 return flow;
             }
         } catch (ParseException e) {
@@ -246,7 +251,7 @@ public class UserServiceImpl implements UserService {
         Integer flow = (Integer) redisTemplate.opsForValue().get(CD_KEY_PREFIX + cdKey);
         if(flow!=null){
             redisTemplate.delete(CD_KEY_PREFIX + cdKey);
-            userMapper.addFlowByUsername(username, flow*(1024*1024));
+            userMapper.addFlowByUsername(username, new Long(flow)*(1024*1024));
             return flow;
         }
         return -1;

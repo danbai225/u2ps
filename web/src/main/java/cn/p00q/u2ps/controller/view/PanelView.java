@@ -23,21 +23,24 @@ import java.util.List;
 @Validated
 @RequestMapping("/panel")
 public class PanelView {
-    private UserService userService;
-    private NodeService nodeService;
-    private TunnelService tunnelService;
-    private ClientService clientService;
-    private FlowService flowService;
-    private RedisTemplate redisTemplate;
+    private final UserService userService;
+    private final NodeService nodeService;
+    private final TunnelService tunnelService;
+    private final ClientService clientService;
+    private final FlowService flowService;
+    private final RedisTemplate redisTemplate;
+    private final PayService payService;
 
-    public PanelView(UserService userService, NodeService nodeService, TunnelService tunnelService, ClientService clientService, FlowService flowService, RedisTemplate redisTemplate) {
+    public PanelView(UserService userService, NodeService nodeService, TunnelService tunnelService, ClientService clientService, FlowService flowService, RedisTemplate redisTemplate, PayService payService) {
         this.userService = userService;
         this.nodeService = nodeService;
         this.tunnelService = tunnelService;
         this.clientService = clientService;
         this.flowService = flowService;
         this.redisTemplate = redisTemplate;
+        this.payService = payService;
     }
+
     @GetMapping(value = {"/index","/",""})
     public String index(Model model, HttpServletRequest request) {
         User user = (User) request.getSession().getAttribute(User.class.getSimpleName());
@@ -51,6 +54,7 @@ public class PanelView {
         model.addAttribute("Token",userService.getToken(user.getUsername()));
         model.addAttribute("Gg",redisTemplate.opsForValue().get("Gg"));
         model.addAttribute("SignReward",userService.isSignReward(user.getUsername()));
+        model.addAttribute("Durl",redisTemplate.opsForValue().get("Durl"));
         return "panel/index";
     }
     @GetMapping(value = {"/node/my"})
@@ -94,5 +98,14 @@ public class PanelView {
         model.addAttribute("Nodes",nodeService.getNodesNewTunnel());
         model.addAttribute("Client", clientService.getUserClientNewTunnel(user.getUsername()));
         return "panel/tunnel/new";
+    }
+    @GetMapping(value = {"/traffic_market"})
+    public String trafficMarket(Model model, HttpServletRequest request){
+        User user = (User) request.getSession().getAttribute(User.class.getSimpleName());
+        model.addAttribute("User",userService.getUserByUsername(user.getUsername()));
+        model.addAttribute("FlowPrice",payService.getFlowPrice());
+        model.addAttribute("Booths",payService.getNormalBooth());
+        model.addAttribute("RNum", payService.getRNum(user.getUsername()));
+        return "panel/trafficMarket";
     }
 }

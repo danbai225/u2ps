@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
         Date update = UserFlowUpdateTime.get(byId.getUsername());
 
         Date date = new Date();
-        if (update != null && (date.getTime() - update.getTime()) < DateUtils.Second * 10&&userFlowCache<Flow.MB100) {
+        if (update != null && (date.getTime() - update.getTime()) < DateUtils.Second * 10) {
             userFlowCache += flow;
             UserFlowCache.put(byId.getUsername(), userFlowCache);
             return;

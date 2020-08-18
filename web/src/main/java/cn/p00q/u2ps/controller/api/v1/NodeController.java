@@ -25,16 +25,14 @@ import javax.validation.constraints.NotNull;
 @RestController
 @Validated
 public class NodeController {
-    private  TunnelService tunnelService;
-    private  UserService userService;
-    private  NodeService nodeService;
-    private ClientService clientService;
+    private final TunnelService tunnelService;
+    private final UserService userService;
+    private final NodeService nodeService;
 
-    public NodeController(TunnelService tunnelService, UserService userService, NodeService nodeService, ClientService clientService) {
+    public NodeController(TunnelService tunnelService, UserService userService, NodeService nodeService) {
         this.tunnelService = tunnelService;
         this.userService = userService;
         this.nodeService = nodeService;
-        this.clientService = clientService;
     }
     @PostMapping("/create")
     public Result create(@Validated(Node.Create.class) Node node, @NotBlank String token){

@@ -47,6 +47,4 @@ public interface NodeService {
      * @return
      */
     Node getNode(Integer id);
-
-
 }

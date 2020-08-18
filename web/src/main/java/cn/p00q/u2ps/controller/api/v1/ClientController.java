@@ -23,8 +23,8 @@ import javax.validation.constraints.NotNull;
 @RestController
 @Validated
 public class ClientController {
-    private  UserService userService;
-    private ClientService clientService;
+    private final UserService userService;
+    private final ClientService clientService;
 
     public ClientController(UserService userService, ClientService clientService) {
         this.userService = userService;

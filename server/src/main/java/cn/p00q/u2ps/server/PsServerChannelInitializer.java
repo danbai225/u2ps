@@ -5,8 +5,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @program: u2ps
@@ -21,6 +24,9 @@ public class PsServerChannelInitializer extends ChannelInitializer<SocketChannel
         try {
             //添加编解码
             socketChannel.pipeline().addLast(new LineBasedFrameDecoder(1024));
+            //读超时时间设置为10s，0表示不监控
+            socketChannel.pipeline().addLast(new IdleStateHandler(0, 0, 50, TimeUnit.SECONDS));
+            //加入处理事件
             socketChannel.pipeline().addLast(new StringDecoder());
             socketChannel.pipeline().addLast(new PsServerHandler());
             socketChannel.pipeline().addLast("decoder", new StringDecoder(CharsetUtil.UTF_8));

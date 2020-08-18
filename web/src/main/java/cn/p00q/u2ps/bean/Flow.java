@@ -82,6 +82,9 @@ public class Flow {
     public static Long toMB(Long flow){
         return flow/(1024*1024*1024);
     }
+    public static Long GBtoByte(Integer flow){
+        return new Long(flow)*(1024*1024*1024);
+    }
     @Override
     public String toString() {
         return "Flow{" +

@@ -5,17 +5,26 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>U2PS | 创建客户端</title>
+    <title>U2PS | 流量市场</title>
     <!-- 告诉浏览器屏幕自适应 -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Font Awesome -->
     <link href="https://cdn.staticfile.org/font-awesome/5.14.0/css/all.css" rel="stylesheet">
     <!-- Ionicons -->
     <link rel="stylesheet" href="https://cdn.staticfile.org/ionicons/5.1.2/collection/components/icon/icon.min.css">
+    <!-- Tempusdominus Bbootstrap 4 -->
+    <link rel="stylesheet"
+          href="https://cdn.staticfile.org/tempusdominus-bootstrap-4/5.1.2/css/tempusdominus-bootstrap-4.min.css">
+    <!-- iCheck -->
+    <link href="https://cdn.staticfile.org/icheck-bootstrap/2.0.3/icheck-bootstrap.min.css" rel="stylesheet">
     <!-- 主题样式 -->
     <link href="https://cdn.staticfile.org/admin-lte/3.0.5/css/adminlte.min.css" rel="stylesheet">
     <!-- overlayScrollbars -->
     <link rel="stylesheet" href="https://cdn.staticfile.org/overlayscrollbars/1.13.0/css/OverlayScrollbars.min.css">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="https://cdn.staticfile.org/bootstrap-daterangepicker/3.0.5/daterangepicker.min.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="https://cdn.staticfile.org/summernote/0.8.18/summernote-bs4.css">
     <!-- 离线 Google 字体: Source Sans Pro -->
     <link href="/css/google.css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
 </head>
@@ -50,7 +59,7 @@
                     <!-- 使用 .nav-icon 类添加图标，
                          或使用 font-awesome 或其他任何图标字体库 -->
                     <li class="nav-item has-treeview">
-                        <a href="/panel/index" class="nav-link">
+                        <a href="/panel/index" class="nav-link ">
                             <i class="nav-icon fas fa-tachometer-alt"></i>
                             <p>首页</p>
                         </a>
@@ -82,7 +91,7 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-item  menu-open">
+                    <li class="nav-item">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-podcast"></i>
                             <p>客户端<i class="right fas fa-angle-left"></i></p>
@@ -95,7 +104,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="/panel/client/new" class="nav-link active">
+                                <a href="/panel/client/new" class="nav-link">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>创建客户端</p>
                                 </a>
@@ -128,16 +137,16 @@
                             <p>实名认证</p>
                         </a>
                     </li>
-                    <li class="nav-item has-treeview">
-                        <a href="/panel/traffic_market" class="nav-link">
-                            <i class="nav-icon fas fa-shopping-cart"></i>
-                            <p>流量市场</p>
-                        </a>
-                    </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link" data-toggle="modal" data-target="#modal-sm">
                             <i class="nav-icon fas fa-barcode"></i>
                             <p>兑换码</p>
+                        </a>
+                    </li>
+                    <li class="nav-item has-treeview menu-open">
+                        <a href="/panel/traffic_market" class="nav-link active">
+                            <i class="nav-icon fas fa-shopping-cart"></i>
+                            <p>流量市场</p>
                         </a>
                     </li>
                     <li class="nav-item has-treeview">
@@ -177,6 +186,81 @@
         </div>
         <!-- /.modal-dialog -->
     </div>
+    <div class="modal fade" id="modal-gmll">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">流量购买弹窗</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>支付方式(点击更改):</label>
+                        <button type="button" onclick="{
+                          if(payType==1){
+                              payType=2
+                              $(this).html('微信');
+                          }else {
+                               payType=1
+                              $(this).html('支付宝');
+                          }
+                        }" class="btn btn-block btn-outline-primary">支付宝
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>数量:</label>
+                        <input type="number" class="form-control" id="gmnum" placeholder="输入购买数量(GB)"
+                               onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"
+                               onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}">
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button onclick="goumai()" type="button" class="btn btn-primary">购买</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <div class="modal fade" id="modal-csll">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">流量出售弹窗</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>单价:</label>
+                        <input type="number" class="form-control" id="csdj" placeholder="输入出售单价" step="1" min="0"
+                               max="10"
+                               onkeyup="this.value= this.value.match(/\d+(\.\d{0,2})?/) ? this.value.match(/\d+(\.\d{0,2})?/)[0] : ''">
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>数量:</label>
+                        <input type="number" class="form-control" id="csnum" placeholder="输入出售数量"
+                               onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"
+                               onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}">
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button onclick="chushou()" type="button" class="btn btn-primary">出售</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
     <!--弹窗end-->
 
     <!-- Content Wrapper. 包含页面内容 -->
@@ -184,60 +268,50 @@
         <!-- 主体内容 -->
         <section class="content">
             <div class="container-fluid">
+                <!-- Main row -->
                 <div class="row">
-                    <!-- left column -->
-                    <div class="col-md-6">
-                        <!-- general form elements -->
-                        <div class="card card-primary">
-                            <div class="card-header">
-                                <h3 class="card-title">创建节点</h3>
+                    <div class="col-md-6" style="margin-top: 20px;">
+                        <div class="small-box bg-warning" onclick="boothId=1" href="#" data-toggle="modal" data-target="#modal-gmll">
+                            <div class="inner">
+                                <h4>官方流量:</h4>
+                                <h5 th:text="${'单价:'+FlowPrice+'元/GB'}"></h5>
                             </div>
-                            <!-- /.card-header -->
-                            <!-- form start -->
-                            <form id="newNode" role="form" method="post">
-                                <div class="card-body">
-                                    <div class="form-group">
-                                        <label>输入唯一Key(输入AutoGenerate自动生成):</label>
-                                        <input type="text" value="AutoGenerate" class="form-control" placeholder="请输入唯一Key " name="secretKey">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>备注:</label>
-                                        <input type="text" class="form-control" placeholder="输入备注" name="remark">
-                                    </div>
-                                    <input type=hidden name="token" th:value="${session.Token}">
-                                </div>
-                                <!-- /.card-body -->
-                                <div class="card-footer">
-                                    <button onclick="post()" type="button" class="btn btn-primary float-right">创建客户端</button>
-                                </div>
-                            </form>
-                        </div>
-                        <!-- /.card -->
-                    </div>
-                    <!--/.col (left) -->
-                    <!-- right column -->
-                    <div class="col-md-6">
-                        <!-- 禁用常规表单元素 -->
-                        <div class="card card-warning">
-                            <div class="card-header">
-                                <h3 class="card-title">节点介绍</h3>
+                            <div class="icon">
+                                <i class="fas fa-shopping-cart"></i>
                             </div>
-                            <!-- /.card-header -->
-                            <h4>表单参数介绍:</h4>
-                            <p>- Key 必须唯一可以使用默认值 AutoGenerate 服务端自动生成一个.</p>
-                            <p>- 备注 随意可以留空.</p>
-                            <h4>节点加入方法:</h4>
-                            <p>下载客户端(节点和普通用户客户端是一体的).给予执行权限,用以下命令运行:</p>
-                            <pre>./u2ps -k {Key}</pre>
-                            <!-- /.card-body -->
+                            <span class="progress-description" th:text="${'我的余额:'+RNum+'RMB'}"></span>
                         </div>
-                        <!-- /.card -->
                     </div>
-                    <!--/.col (right) -->
+                    <div class="col-md-6" style="margin-top: 20px;">
+                        <div class="small-box bg-info" data-toggle="modal" data-target="#modal-csll">
+                            <div class="inner">
+                                <h4>出售我的流量:</h4>
+                                <h5 th:text="${'我有:'+(User.flow>524288000?#numbers.formatDecimal(User.flow/1024.0/1024.0/1024,1,2)+'GB':#numbers.formatDecimal(User.flow/1024.0/1024.0,1,1)+'MB')}"></h5>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-gavel"></i>
+                            </div>
+                            <span class="progress-description">出售以GB为单位的正整数</span>
+                        </div>
+                    </div>
+                    <div class="card-body pb-0" th:each="booth,boothStat : ${Booths}">
+                        <div class="row d-flex align-items-stretch">
+                            <div class="col-12 col-sm-4 col-md-3 d-flex align-items-stretch">
+                                <div class="info-box bg-warning" href="#" data-toggle="modal" data-target="#modal-gmll" th:onclick="'boothId='+${booth.id}" >
+                                    <span class="info-box-icon"><i class="fas fa-shopping-cart"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">来自用户的流量出售</span>
+                                        <span class="info-box-number" th:text="${'单价:'+booth.price+'/GB'}"></span>
+                                        <span class="progress-description" th:text="${'剩余'+booth.quantity+'GB'}">剩余100GB</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <!-- /.row -->
             </div><!-- /.container-fluid -->
         </section>
+        <!-- /.content -->
     </div>
     <!-- /.content-wrapper -->
     <footer class="main-footer">
@@ -254,33 +328,46 @@
     <!-- /.control-sidebar -->
 </div>
 <!-- ./wrapper -->
-<!-- jQuery -->
+
 <!-- jQuery -->
 <script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
-
+<!-- jQuery UI 1.11.4 -->
+<script src="https://cdn.staticfile.org/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<!-- 解决使用 Bootstrap 提示工具与 jQuery UI 提示工具冲突 -->
+<script>
+    $.widget.bridge('uibutton', $.ui.button)
+</script>
 <!-- Bootstrap 4 -->
 <script src="https://cdn.staticfile.org/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- ChartJS -->
+<script src="https://cdn.staticfile.org/Chart.js/3.0.0-alpha.2/chart.min.js"></script>
+<!-- jQuery Knob Chart -->
+<script src="https://cdn.staticfile.org/jQuery-Knob/1.2.13/jquery.knob.min.js"></script>
+<!-- daterangepicker -->
+<script src="https://cdn.staticfile.org/bootstrap-daterangepicker/3.0.5/moment.min.js"></script>
+<script src="https://cdn.staticfile.org/bootstrap-daterangepicker/3.0.5/daterangepicker.min.js"></script>
+<!-- Tempusdominus Bootstrap 4 -->
+<script src="https://cdn.staticfile.org/tempusdominus-bootstrap-4/5.1.2/js/tempusdominus-bootstrap-4.min.js"></script>
 <!-- overlayScrollbars -->
 <script src="https://cdn.staticfile.org/overlayscrollbars/1.13.0/js/jquery.overlayScrollbars.min.js"></script>
 <!-- AdminLTE App -->
 <script src="https://cdn.staticfile.org/admin-lte/3.0.5/js/adminlte.min.js"></script>
-<script src="https://cdn.staticfile.org/jquery-validate/1.19.2/jquery.validate.min.js"></script>
-<script src="https://cdn.staticfile.org/jquery-validate/1.19.2/localization/messages_zh.min.js"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     var token = /*[[${session.Token}]]*/ null;
+
     /*]]>*/
-    function duihuan(){
+    function duihuan() {
         var cdkey = $("#cdkey").val();
-        if (cdkey.length<1){
+        if (cdkey.length < 1) {
             return
         }
         $.ajax({
             //几个参数需要注意一下
             type: "POST",//方法类型
             dataType: "json",//预期服务器返回的数据类型
-            url: "/v1/user/cdKey" ,//url
-            data: {token:token,cdkey:cdkey},
+            url: "/v1/user/cdKey",//url
+            data: {token: token, cdkey: cdkey},
             success: function (result) {
                 $(document).Toasts('create', {
                     class: 'bg-info',
@@ -291,28 +378,51 @@
             }
         });
     }
-    $("#newNode").validate({
-        rules: {
-            secretKey: {required: true}
-        }
-    })
-    function post(){
-        if (! $("#newNode").valid()) {
-            return;
-        }
+
+    var boothId;
+    var buyNum;
+    var payType = 1;
+
+    function goumai() {
+        buyNum = $("#gmnum").val()
         $.ajax({
             //几个参数需要注意一下
             type: "POST",//方法类型
             dataType: "json",//预期服务器返回的数据类型
-            url: "/v1/client/create" ,//url
-            data: $('#newNode').serialize(),
+            url: "/pay/buyFlow",//url
+            data: {boothId: boothId, buyNum: buyNum, payType: payType},
             success: function (result) {
-                $(document).Toasts('create', {
-                    class: 'bg-info',
-                    title: '消息提醒',
-                    subtitle: '-U2PS',
-                    body: result.msg
-                })
+                if (result.code == 0) {
+                    window.location.href = result.data;
+                } else {
+                    $(document).Toasts('create', {
+                        class: 'bg-info',
+                        title: '消息提醒',
+                        subtitle: '-U2PS',
+                        body: result.msg
+                    })
+                }
+            }
+        });
+    }
+    function chushou() {
+        $.ajax({
+            //几个参数需要注意一下
+            type: "POST",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            url: "/pay/sellFlow",//url
+            data: {price: $('#csdj').val(), quantity:$('#csnum').val()},
+            success: function (result) {
+                if (result.code == 0) {
+                    location.reload();
+                } else {
+                    $(document).Toasts('create', {
+                        class: 'bg-info',
+                        title: '消息提醒',
+                        subtitle: '-U2PS',
+                        body: result.msg
+                    })
+                }
             }
         });
     }

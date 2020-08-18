@@ -11,6 +11,7 @@ import cn.p00q.u2ps.service.*;
 import cn.p00q.u2ps.utils.DateUtils;
 import cn.p00q.u2ps.utils.IpUtils;
 import cn.p00q.u2ps.utils.MapUtil;
+import cn.p00q.u2ps.utils.SpringUtil;
 import com.alibaba.fastjson.JSON;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -18,8 +19,10 @@ import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +46,8 @@ public class PsServiceImpl implements PsService {
     private static ConcurrentHashMap<Integer, ChannelHandlerContext> clientCtxMap;
     private static ConcurrentHashMap<String, ChannelHandlerContext> nodeCtxMap;
     private static ConcurrentHashMap<String, String> usernameMap;
+    private static HashMap<String, Boolean> HeartbeatNMap;
+    private static HashMap<Integer, Boolean> HeartbeatCMap;
     private RedisTemplate redisTemplate;
     private UserService userService;
     private NodeService nodeService;
@@ -53,6 +58,8 @@ public class PsServiceImpl implements PsService {
         clientCtxMap = new ConcurrentHashMap<>();
         nodeCtxMap = new ConcurrentHashMap<>();
         usernameMap = new ConcurrentHashMap<>();
+        HeartbeatNMap=new HashMap<>();
+        HeartbeatCMap=new HashMap<>();
     }
 
     @Value("${u2ps.askNode.num:100}")
@@ -143,6 +150,8 @@ public class PsServiceImpl implements PsService {
             reqByteBuf.writeBytes(reqMsgByte);
             ctx.writeAndFlush(reqByteBuf);
         } catch (Exception e) {
+            PsServiceImpl psServer = SpringUtil.getBean(PsServiceImpl.class);
+            psServer.disconnect(ctx);
             log.error(e.getMessage());
             e.printStackTrace();
         }
@@ -193,6 +202,27 @@ public class PsServiceImpl implements PsService {
                 rs.put("node", nodeByIp);
                 rs.put("versions", redisTemplate.opsForValue().get("up2s_versions"));
                 sendMsg(ctx, Msg.TypeAuthenticationResultOk, "连接服务端成功!", rs);
+
+                List<Tunnel> tunnelsByNodeId = tunnelService.getTunnelsByNodeId(nodeByIp.getId());
+                List<Client> clientsByIp = clientServer.getClientsByIp(nodeByIp.getIp());
+                //向在线的客户端更新节点
+                if(clientsByIp!=null){
+                    clientsByIp.forEach(client -> {
+                        ChannelHandlerContext clientCtx = getClientCtx(client.getId());
+                        if(clientCtx!=null){
+                            updateNode(clientCtx,nodeByIp);
+                        }
+                    });
+                }
+                //更新隧道
+                if(tunnelsByNodeId!=null){
+                    tunnelsByNodeId.forEach(tunnel -> {
+                        ChannelHandlerContext clientCtx = getClientCtx(tunnel.getClientId());
+                        if(clientCtx!=null){
+                            updateTunnel(clientCtx,tunnel);
+                        }
+                    });
+                }
                 return;
             }
             sendMsg(ctx, Msg.AuthenticationResultErr, "没有找到节点信息!");
@@ -285,6 +315,7 @@ public class PsServiceImpl implements PsService {
         ChannelHandlerContext clientCtx = getClientCtx(tunnel.getClientId());
         if (clientCtx != null) {
             updateTunnel(clientCtx, tunnel);
+            updateNode(clientCtx, nodeService.getNode(tunnel.getNodeId()));
         }
         //node
         ChannelHandlerContext nodeCtx = getNodeCtx(nIp);
@@ -316,10 +347,11 @@ public class PsServiceImpl implements PsService {
         redisTemplate.opsForValue().set(msg.getMsg(), Msg.getBooleanData(msg), 1, TimeUnit.MINUTES);
     }
 
-    public void TcpWeb(ChannelHandlerContext ctx,Msg msg){
+    public void TcpWeb(ChannelHandlerContext ctx, Msg msg) {
         Integer tid = Msg.getData(msg, Integer.class);
-        tunnelService.deleteTunnelByNodeIp(tid,IpUtils.GetIPByCtx(ctx));
+        tunnelService.deleteTunnelByNodeIp(tid, IpUtils.GetIPByCtx(ctx));
     }
+
     /**
      * 更新 增加 隧道
      *
@@ -366,73 +398,72 @@ public class PsServiceImpl implements PsService {
      */
     public void updateFlow(Msg msg) {
         FlowType flowType = Msg.getData(msg, FlowType.class);
-        //计算流量
-        userService.flowCalculation(flowType.getTunnelId(), flowType.getFlow());
-            if (flowType.getNodeId() == -1) {
-                Flow tunnelFlow = (Flow) redisTemplate.opsForValue().get(Flow.TunnelFlowPrefix + flowType.getTunnelId() + Flow.ClientSuffix);
-                //增加隧道流量
-                if (tunnelFlow == null) {
-                    tunnelFlow = new Flow(flowType.getUp() ? flowType.getFlow() : 0, flowType.getUp() ? 0 : flowType.getFlow());
-                } else {
-                    //是上传?
-                    if (flowType.getUp()) {
-                        tunnelFlow.addUP(flowType.getFlow());
-                    }//噢,不是下载啦!
-                    else {
-                        tunnelFlow.addDown(flowType.getFlow());
-                    }
-                }
-                redisTemplate.opsForValue().set(Flow.TunnelFlowPrefix + flowType.getTunnelId() + Flow.ClientSuffix, tunnelFlow);
-                return;
-            }
-            Flow nodeFlow = (Flow) redisTemplate.opsForValue().get(Flow.NodeFlowPrefix + flowType.getNodeId());
-            Flow tunnelFlow = (Flow) redisTemplate.opsForValue().get(Flow.TunnelFlowPrefix + flowType.getTunnelId());
-            //增加节点流量
-            if (nodeFlow == null) {
-                nodeFlow = new Flow(flowType.getFlow(), flowType.getFlow());
-            } else {
-                nodeFlow.addUP(flowType.getFlow());
-                nodeFlow.addDown(flowType.getFlow());
-            }
-            redisTemplate.opsForValue().set(Flow.NodeFlowPrefix + flowType.getNodeId(), nodeFlow);
+        if (flowType.getNodeId() == -1) {
+            Flow tunnelFlow = (Flow) redisTemplate.opsForValue().get(Flow.TunnelFlowPrefix + flowType.getTunnelId() + Flow.ClientSuffix);
             //增加隧道流量
             if (tunnelFlow == null) {
-                tunnelFlow = new Flow(0L, 0L);
-            }
-            //是上传?
-            if (flowType.getUp()) {
-                //计入总数
-                CacheFlowCount.addUP(flowType.getFlow());
-                CacheFlowToday.addUP(flowType.getFlow());
-                tunnelFlow.addUP(flowType.getFlow());
-            }//噢,不是下载啦!
-            else {
-                CacheFlowCount.addDown(flowType.getFlow());
-                CacheFlowToday.addDown(flowType.getFlow());
-                tunnelFlow.addDown(flowType.getFlow());
-            }
-            if (CacheFlowCount.count() > Flow.MB100) {
-                Flow flow = (Flow) redisTemplate.opsForValue().get(Flow.FlowCount);
-                if (flow == null) {
-                    redisTemplate.opsForValue().set(Flow.FlowCount, CacheFlowCount);
-                } else {
-                    flow.add(CacheFlowCount);
-                    redisTemplate.opsForValue().set(Flow.FlowCount, flow);
+                tunnelFlow = new Flow(flowType.getUp() ? flowType.getFlow() : 0, flowType.getUp() ? 0 : flowType.getFlow());
+            } else {
+                //是上传?
+                if (flowType.getUp()) {
+                    tunnelFlow.addUP(flowType.getFlow());
+                }//噢,不是下载啦!
+                else {
+                    tunnelFlow.addDown(flowType.getFlow());
                 }
-                CacheFlowCount.clear();
             }
-            if (CacheFlowToday.count() > Flow.MB100) {
-                Flow flow = (Flow) redisTemplate.opsForValue().get(Flow.FlowToDayPrefix + DateUtils.getDay());
-                if (flow == null) {
-                    redisTemplate.opsForValue().set(Flow.FlowToDayPrefix + DateUtils.getDay(), CacheFlowToday, 30, TimeUnit.DAYS);
-                } else {
-                    flow.add(CacheFlowToday);
-                    redisTemplate.opsForValue().set(Flow.FlowToDayPrefix + DateUtils.getDay(), flow, 30, TimeUnit.DAYS);
-                }
-                CacheFlowToday.clear();
+            redisTemplate.opsForValue().set(Flow.TunnelFlowPrefix + flowType.getTunnelId() + Flow.ClientSuffix, tunnelFlow);
+            return;
+        }
+        //计算流量
+        userService.flowCalculation(flowType.getTunnelId(), flowType.getFlow());
+        Flow nodeFlow = (Flow) redisTemplate.opsForValue().get(Flow.NodeFlowPrefix + flowType.getNodeId());
+        Flow tunnelFlow = (Flow) redisTemplate.opsForValue().get(Flow.TunnelFlowPrefix + flowType.getTunnelId());
+        //增加节点流量
+        if (nodeFlow == null) {
+            nodeFlow = new Flow(flowType.getFlow(), flowType.getFlow());
+        } else {
+            nodeFlow.addUP(flowType.getFlow());
+            nodeFlow.addDown(flowType.getFlow());
+        }
+        redisTemplate.opsForValue().set(Flow.NodeFlowPrefix + flowType.getNodeId(), nodeFlow);
+        //增加隧道流量
+        if (tunnelFlow == null) {
+            tunnelFlow = new Flow(0L, 0L);
+        }
+        //是上传?
+        if (flowType.getUp()) {
+            //计入总数
+            CacheFlowCount.addUP(flowType.getFlow());
+            CacheFlowToday.addUP(flowType.getFlow());
+            tunnelFlow.addUP(flowType.getFlow());
+        }//噢,不是下载啦!
+        else {
+            CacheFlowCount.addDown(flowType.getFlow());
+            CacheFlowToday.addDown(flowType.getFlow());
+            tunnelFlow.addDown(flowType.getFlow());
+        }
+        redisTemplate.opsForValue().set(Flow.TunnelFlowPrefix + flowType.getTunnelId(), tunnelFlow);
+        if (CacheFlowCount.count() > Flow.MB100) {
+            Flow flow = (Flow) redisTemplate.opsForValue().get(Flow.FlowCount);
+            if (flow == null) {
+                redisTemplate.opsForValue().set(Flow.FlowCount, CacheFlowCount);
+            } else {
+                flow.add(CacheFlowCount);
+                redisTemplate.opsForValue().set(Flow.FlowCount, flow);
             }
-            redisTemplate.opsForValue().set(Flow.TunnelFlowPrefix + flowType.getTunnelId(), tunnelFlow);
-
+            CacheFlowCount.clear();
+        }
+        if (CacheFlowToday.count() > Flow.MB100) {
+            Flow flow = (Flow) redisTemplate.opsForValue().get(Flow.FlowToDayPrefix + DateUtils.getDay());
+            if (flow == null) {
+                redisTemplate.opsForValue().set(Flow.FlowToDayPrefix + DateUtils.getDay(), CacheFlowToday, 30, TimeUnit.DAYS);
+            } else {
+                flow.add(CacheFlowToday);
+                redisTemplate.opsForValue().set(Flow.FlowToDayPrefix + DateUtils.getDay(), flow, 30, TimeUnit.DAYS);
+            }
+            CacheFlowToday.clear();
+        }
     }
 
     @Override
@@ -443,5 +474,53 @@ public class PsServiceImpl implements PsService {
     @Override
     public void deleteNode(String ip) {
         deleteNode(getNodeCtx(ip));
+    }
+    public void Heartbeat(Msg msg){
+        if(msg.getMsg().equals("Client")){
+            HeartbeatCMap.put(Msg.getData(msg, Integer.class), true);
+        }else {
+            HeartbeatNMap.put(Msg.getStringData(msg), true);
+        }
+    }
+    @Scheduled(fixedDelay = 30000)
+    public void ConnectionDetection() {
+        //遍历客户端心跳map
+        HeartbeatCMap.forEach((k,v)->{
+            if(!v){
+                //把没有回复心跳的连接删除
+                clientCtxMap.remove(k);
+                clientServer.setOnline(k, false);
+            }
+        });
+        HeartbeatNMap.forEach((k,v)->{
+            if(!v){
+                //把没有回复心跳的连接删除
+                nodeCtxMap.remove(k);
+                nodeService.setOnline(k, false);
+            }
+        });
+        //清空
+        HeartbeatCMap.clear();
+        HeartbeatNMap.clear();
+
+        clientCtxMap.forEach((k,v)->{
+            if(v!=null){
+                sendMsg(v,Msg.Heartbeat,"");
+                HeartbeatCMap.put(k,false);
+            }else {
+                clientCtxMap.remove(k);
+                clientServer.setOnline(k, false);
+            }
+        });
+
+        nodeCtxMap.forEach((k,v)->{
+            if(v!=null){
+                sendMsg(v,Msg.Heartbeat,"");
+                HeartbeatNMap.put(k,false);
+            }else {
+                nodeCtxMap.remove(k);
+                nodeService.setOnline(k, false);
+            }
+        });
     }
 }

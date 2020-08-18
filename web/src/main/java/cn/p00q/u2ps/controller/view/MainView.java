@@ -6,7 +6,6 @@ import cn.p00q.u2ps.entity.User;
 import cn.p00q.u2ps.service.UserService;
 import cn.p00q.u2ps.utils.IpUtils;
 import cn.p00q.u2ps.utils.Vaptcha;
-import cn.p00q.u2ps.utils.yzmUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,14 +29,10 @@ import javax.validation.constraints.NotBlank;
 @Controller
 @Validated
 public class MainView {
-    private  UserService userService;
-    private RedisTemplate redisTemplate;
-
-    public MainView(UserService userService, RedisTemplate redisTemplate) {
+    private final UserService userService;
+    public MainView(UserService userService) {
         this.userService = userService;
-        this.redisTemplate = redisTemplate;
     }
-
     @GetMapping(value = {"/index","","/"})
     public String index() {
         return "index";
@@ -57,6 +52,10 @@ public class MainView {
         String token = userService.login(user);
         if(StringUtils.isEmpty(token)){
             model.addAttribute("Msg", "账号或密码错误");
+            return "login";
+        }
+        if (token.equals("1")){
+            model.addAttribute("Msg", "请先完成邮箱验证,没收到验证码可以重新注册.");
             return "login";
         }
         User user1 = userService.getUserByUsername(user.getUsername());
@@ -111,7 +110,6 @@ public class MainView {
     }
     @GetMapping("/autonym")
     public String autonym(){
-        return "/autonym";
+        return "autonym";
     }
-
 }

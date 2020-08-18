@@ -27,17 +27,15 @@ import javax.validation.constraints.NotNull;
 @RestController
 @Validated
 public class TunnelController {
-    private  TunnelService tunnelService;
-    private  UserService userService;
-    private  NodeService nodeService;
-    private ClientService clientService;
+    private final TunnelService tunnelService;
+    private final UserService userService;
+    private final NodeService nodeService;
     @Reference
     private PsService psService;
-    public TunnelController(TunnelService tunnelService, UserService userService, NodeService nodeService, ClientService clientService) {
+    public TunnelController(TunnelService tunnelService, UserService userService, NodeService nodeService) {
         this.tunnelService = tunnelService;
         this.userService = userService;
         this.nodeService = nodeService;
-        this.clientService = clientService;
     }
 
     @PostMapping("/update")
@@ -77,7 +75,7 @@ public class TunnelController {
     }
     @PostMapping("/port")
     public Result port(@NotNull @Max(value = 65535) @Min(value = 1) Integer servicePort, @NotNull Integer nodeId){
-        boolean nodePortUse = psService.isNodePortUse(nodeService.getIp(nodeId), servicePort);
+        boolean nodePortUse = nodeService.getNodeById(nodeId).getOnline()&&psService.isNodePortUse(nodeService.getIp(nodeId), servicePort);
         return nodePortUse?Result.err("请换一个端口,该端口被占用"):Result.success("很好,这个端口是可以使用的");
     }
 }

@@ -20,6 +20,7 @@ import tk.mybatis.mapper.entity.Example;
 
 import javax.validation.constraints.NotBlank;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  **/
 @Service
 public class PayServiceImpl implements PayService {
-    @Value("${u2ps.domain:http://127.0.0.1:2252}")
+    @Value("${u2ps.domain:https://u2ps.com}")
     private String doMainUrl;
     private RedisTemplate redisTemplate;
     private PayMapper payMapper;
@@ -62,6 +63,7 @@ public class PayServiceImpl implements PayService {
         pay.setPaytype(payType);
         pay.setFee(fee);
         pay.setUsername(username);
+        pay.setCreationtime(new Date());
         pay.setType(Pay.Type_Authentication);
         int insert = payMapper.insert(pay);
         if (insert > 0) {

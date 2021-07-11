@@ -22,9 +22,11 @@
 <body class="register-page" style="min-height: 586.391px;">
 <div>
     <h2>U2PS | 实名认证</h2>
-    <p>认证前先支付认证费用0.5元.</p>
-    <a href="/pay/authentication?payType=1" type="button" class="btn btn-block btn-outline-primary">支付宝</a>
-    <a href="/pay/authentication?payType=2" type="button" class="btn btn-block btn-outline-primary">微信</a>
+    <th:block th:if="${rzfy!=null}">
+        <p>认证前先支付认证费用0.5元.</p>
+        <a href="/pay/authentication?payType=1" type="button" class="btn btn-block btn-outline-primary">支付宝</a>
+        <a href="/pay/authentication?payType=2" type="button" class="btn btn-block btn-outline-primary">微信</a>
+    </th:block>
 </div>
 <div style="width: 33%;min-width: 300px;">
     <form id="rz" role="form" method="post">

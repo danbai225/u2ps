@@ -97,6 +97,7 @@ public class NodeServiceImpl implements NodeService {
         }
         node.setOpen(true);
         node.setOnline(false);
+        node.setCreationTime(new Date());
         node.setCountriesRegions(IpUtils.getCityInfo(node.getIp()));
         if (nodeMapper.insert(node) > 0) {
             return Result.success("创建成功");

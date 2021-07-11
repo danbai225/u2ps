@@ -38,8 +38,8 @@ public class UtilsController {
         if(!Vaptcha.V(token,ipAddr)){
             return Result.err("人机认证失败,请先完成认证");
         }
-        User user = (User) request.getSession().getAttribute(User.class.getSimpleName());
-        if(redisTemplate.opsForSet().isMember(User.RedisAuthenticationSet, user.getUsername())){
+        //这里和下面的那个函数的垃圾代码是一样的重复 没改
+        if(redisTemplate.opsForValue().get("rzfy")==null){
             Random r = new Random();
             String yzm = "";
             for (int i = 0; i < 8; i++) {
@@ -50,6 +50,19 @@ public class UtilsController {
                 return Result.success("发送成功");
             }
             return Result.err("发送失败");
+        }
+        User user = (User) request.getSession().getAttribute(User.class.getSimpleName());
+        if(redisTemplate.opsForSet().isMember(User.RedisAuthenticationSet, user.getUsername())){
+        Random r = new Random();
+        String yzm = "";
+        for (int i = 0; i < 8; i++) {
+            yzm += String.valueOf(r.nextInt(10));
+        }
+        redisTemplate.opsForValue().set(YZMpPREFIX+mobile, yzm, 3, TimeUnit.MINUTES);
+        if(yzmUtils.sendYzm(mobile, yzm)){
+            return Result.success("发送成功");
+        }
+        return Result.err("发送失败");
         }
         return Result.err("请现支付认证费用");
     }
@@ -62,6 +75,13 @@ public class UtilsController {
             redisTemplate.delete(YZMpPREFIX + mobile);
         }
         User user = (User) request.getSession().getAttribute(User.class.getSimpleName());
+        if(redisTemplate.opsForValue().get("rzfy")==null){
+            Result autonym = userService.autonym(realname, idCard, mobile, user.getUsername());
+            if(autonym.isOk()){
+                request.getSession().setAttribute(User.class.getSimpleName(),userService.getUserByUsername(user.getUsername()));
+            }
+            return autonym;
+        }
         if(redisTemplate.opsForSet().isMember(User.RedisAuthenticationSet, user.getUsername())){
             redisTemplate.opsForSet().remove(User.RedisAuthenticationSet,user.getUsername());
             Result autonym = userService.autonym(realname, idCard, mobile, user.getUsername());

@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  **/
 @Service
 public class UserServiceImpl implements UserService {
-    @Value("${u2ps.domain:http://127.0.0.1:2252}")
+    @Value("${u2ps.domain:https://u2ps.com}")
     private String doMainUrl;
     private static final String REDIS_VALIDATE_EMAIL_PREFIX = "validateEmail_";
     private static final String REDIS_USER_NEW_PASS_PREFIX="Password_";
@@ -119,7 +119,7 @@ public class UserServiceImpl implements UserService {
         User userEmail = new User();
         userEmail.setEmail(user.getEmail());
         User dataBaseUser1 = userMapper.selectOne(userEmail);
-        if (dataBaseUser1 != null&&!dataBaseUser.getUsername().equals(dataBaseUser1.getUsername())) {
+        if (dataBaseUser1 != null&&!dataBaseUser1.getEmail().equals(user.getEmail())) {
             return Result.err("邮箱已被使用");
         }
         //密码加密

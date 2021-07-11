@@ -23,10 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -177,7 +174,10 @@ public class PsServiceImpl implements PsService {
                 Map<String, Object> rs = new HashMap<>(4);
                 //返回客户端所需数据
                 List<Tunnel> tunnelsByClientId = tunnelService.getTunnelsByClientId(clientByKey.getId());
-                List<Node> nodeByTunnels = nodeService.getNodeByTunnelsOnLin(tunnelsByClientId);
+                List<Node> nodeByTunnels=new ArrayList<>();
+                if(tunnelsByClientId!=null&&tunnelsByClientId.size()>0){
+                    nodeByTunnels = nodeService.getNodeByTunnelsOnLin(tunnelsByClientId);
+                }
                 rs.put("tunnels", tunnelsByClientId);
                 rs.put("nodes", nodeByTunnels);
                 rs.put("client", clientByKey);

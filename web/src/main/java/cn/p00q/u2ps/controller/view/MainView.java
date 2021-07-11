@@ -30,9 +30,13 @@ import javax.validation.constraints.NotBlank;
 @Validated
 public class MainView {
     private final UserService userService;
-    public MainView(UserService userService) {
+    private final RedisTemplate redisTemplate;
+
+    public MainView(UserService userService, RedisTemplate redisTemplate) {
         this.userService = userService;
+        this.redisTemplate = redisTemplate;
     }
+
     @GetMapping(value = {"/index","","/"})
     public String index() {
         return "index";
@@ -109,7 +113,8 @@ public class MainView {
         return "redirect:/index";
     }
     @GetMapping("/autonym")
-    public String autonym(){
+    public String autonym(Model model){
+        model.addAttribute("rzfy",redisTemplate.opsForValue().get("rzfy"));
         return "autonym";
     }
 }

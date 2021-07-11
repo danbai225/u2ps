@@ -15,6 +15,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -145,6 +146,7 @@ public class TunnelServiceImpl implements TunnelService {
     @Override
     public Result create(Tunnel tunnel) {
         tunnel.setOpen(true);
+        tunnel.setCreationTime(new Date());
         Node node = nodeService.getNodeById(tunnel.getNodeId());
         Client client =clientServer.getClientById(tunnel.getClientId());
         if (node != null) {

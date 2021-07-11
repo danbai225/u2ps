@@ -23,7 +23,7 @@ public class UserTypeInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request,
                              HttpServletResponse response, Object handler) throws Exception {
         User user = (User) request.getSession().getAttribute(User.class.getSimpleName());
-        if (user.getType()<3) {
+        if (user!=null&&user.getType()<3) {
             sendJsonMessage(response,Result.err("请先完成实名认证"));
             return false;
         }

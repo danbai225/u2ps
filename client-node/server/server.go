@@ -39,6 +39,7 @@ func listenClient() {
 	if err != nil {
 		return
 	}
+	defer listen.Close()
 	for {
 		//处理客户端连接
 		conn, err := listen.Accept()
@@ -406,11 +407,12 @@ func (t *TunnelHttp) listenHttp() {
 		Handler:      http.HandlerFunc(t.handleNormal),
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
+	ListeningMap[t.tunnelId] = &t.s
+	defer t.s.Close()
 	err := t.s.ListenAndServe()
 	if err != nil {
 		log.Println(err)
 	}
-	ListeningMap[t.tunnelId] = &t.s
 	delete(ListeningMap, t.tunnelId)
 }
 func (t *TunnelHttp) handleNormal(w http.ResponseWriter, r *http.Request) {
@@ -449,6 +451,7 @@ func (t *TunnelTcp) listenTcp() {
 	if err != nil {
 		return
 	}
+	defer t.s.Close()
 	ListeningMap[t.tunnelId] = t.s
 	for {
 		//处理客户端连接
@@ -476,19 +479,22 @@ func (t *TunnelTcp) handleNormal(conn net.Conn) {
 func CheckWeb(tunnel common.Tunnel) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("Panic info is: ", err)
+			log.Println(err)
 		}
 	}()
 	cid := tunnel.ClientID
 	for {
-		_, ok := TunnelMap[tunnel.ID]
+		t, ok := TunnelMap[tunnel.ID]
 		if !ok {
 			break
 		}
-		tunnel = TunnelMap[tunnel.ID]
+		tunnel = t
 		clientControlConn := GetControlClientConn(cid)
 		if clientControlConn != nil {
 			dataConn := getDataStream(cid)
+			if dataConn.Stream == nil {
+				break
+			}
 			//向客户端发送消息建立一个通向代理端口的连接 id为connId
 			common.SendStruct(clientControlConn, common.NewTunnelConn, "", common.NewConn{ConnUid: dataConn.Id, TunnelId: tunnel.ID})
 			dataConn.Stream.Write([]byte("/ \\r\\n"))
@@ -496,10 +502,13 @@ func CheckWeb(tunnel common.Tunnel) {
 			l, err := dataConn.Stream.Read(buf)
 			if err == nil {
 				s := strings.ToUpper(string(buf[0:l]))
-				log.Println(s)
 				if strings.Contains(s, "HTTP") && strings.Contains(s, "REQUEST") {
 					common.SendStruct(conn, common.TcpWeb, "", tunnel.ID)
-					ListeningMap[tunnel.ID].(net.Listener).Close()
+					l := ListeningMap[tunnel.ID]
+					if l != nil {
+						l.(net.Listener).Close()
+					}
+					log.Println("检测到TCP隧道HTTP流量关闭隧道", tunnel.ID)
 					delete(ListeningMap, tunnel.ID)
 					delete(TunnelMap, tunnel.ID)
 				}
@@ -560,12 +569,13 @@ func NewTunnelUdp(tunnel common.Tunnel) *TunnelUdp {
 }
 func (t *TunnelUdp) listenUdp() {
 	var flow int64
-	var err error
-	udpAddr, _ := net.ResolveUDPAddr("udp", "0.0.0.0:"+strconv.Itoa(t.tunnel.ServicePort))
-	t.s, _ = net.ListenUDP("udp", udpAddr) //创建监听链接
-	if err != nil {
+	var err2 error
+	udpAddr, err1 := net.ResolveUDPAddr("udp", "0.0.0.0:"+strconv.Itoa(t.tunnel.ServicePort))
+	t.s, err2 = net.ListenUDP("udp", udpAddr) //创建监听链接
+	if err1 != nil || err2 != nil {
 		return
 	}
+	defer t.s.Close()
 	ListeningUdpMap[t.tunnelId] = t.s
 	buf := make([]byte, 65507)
 	for {

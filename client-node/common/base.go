@@ -21,7 +21,7 @@ type Tunnel struct {
 	CreationTime int64  `json:"creationTime"`
 	ID           int64  `json:"id"`
 	NodeID       int64  `json:"nodeId"`
-	Open       	 bool   `json:"Open"`
+	Open         bool   `json:"Open"`
 	ServicePort  int    `json:"servicePort"`
 	TargetIP     string `json:"targetIp"`
 	TargetPort   int    `json:"targetPort"`
@@ -29,17 +29,17 @@ type Tunnel struct {
 	Username     string `json:"username"`
 }
 type Node struct {
-	AllowWeb           bool    `json:"allowWeb"`
-	CountriesRegions   string  `json:"countriesRegions"`
-	CreationTime       int64   `json:"creationTime"`
-	FlowRatio          float64 `json:"flowRatio"`
-	ID                 int64   `json:"id"`
-	IP                 string  `json:"ip"`
-	Online             bool    `json:"online"`
-	Open               bool    `json:"open"`
-	Port               int     `json:"port"`
-	Ports              string  `json:"ports"`
-	Username           string  `json:"username"`
+	AllowWeb         bool    `json:"allowWeb"`
+	CountriesRegions string  `json:"countriesRegions"`
+	CreationTime     int64   `json:"creationTime"`
+	FlowRatio        float64 `json:"flowRatio"`
+	ID               int64   `json:"id"`
+	IP               string  `json:"ip"`
+	Online           bool    `json:"online"`
+	Open             bool    `json:"open"`
+	Port             int     `json:"port"`
+	Ports            string  `json:"ports"`
+	Username         string  `json:"username"`
 }
 type Client struct {
 	ClientIP     string `json:"clientIp"`
@@ -60,10 +60,10 @@ type NodeDataConn struct {
 	Id     string
 }
 type FlowType struct {
-	IsUp bool `json:"is_up"`
-	NodeId int64 `json:"node_id"`
+	IsUp     bool  `json:"is_up"`
+	NodeId   int64 `json:"node_id"`
 	TunnelId int64 `json:"tunnel_id"`
-	Flow int64 `json:"flow"`
+	Flow     int64 `json:"flow"`
 }
 type MsgType string
 
@@ -78,12 +78,12 @@ const (
 	NewTunnelConn              MsgType = "NewTunnelConn"
 	UpdateTunnel               MsgType = "UpdateTunnel"
 	IsPortUse                  MsgType = "IsPortUse"
-	DeleteTunnel			   MsgType = "DeleteTunnel"
-	DeleteNode				   MsgType = "DeleteNode"
-	UpdateNode				   MsgType = "UpdateNode"
-	UpdateFlow    			   MsgType = "UpdateFlow"
-	TcpWeb					   MsgType = "TcpWeb"
-	Heartbeat				   MsgType = "Heartbeat"
+	DeleteTunnel               MsgType = "DeleteTunnel"
+	DeleteNode                 MsgType = "DeleteNode"
+	UpdateNode                 MsgType = "UpdateNode"
+	UpdateFlow                 MsgType = "UpdateFlow"
+	TcpWeb                     MsgType = "TcpWeb"
+	Heartbeat                  MsgType = "Heartbeat"
 )
 
 func GetMsg(Type MsgType, msg string, data interface{}) Msg {
@@ -153,7 +153,7 @@ func ToStruct(s interface{}, strJson interface{}) {
 func ToJsonStr(s interface{}) string {
 	return string(ToJsonBytes(s))
 }
-func CopyBuffer(dst net.Conn, src net.Conn) int64{
+func CopyBuffer(dst net.Conn, src net.Conn) int64 {
 	defer func() {
 		dst.Close()
 		src.Close()
@@ -170,21 +170,21 @@ func CopyBuffer(dst net.Conn, src net.Conn) int64{
 		}
 		if nr > 0 {
 			nw, we := dst.Write(buf[0:nr])
-			if nr != nw||we!=nil{
+			if nr != nw || we != nil {
 				break
 			}
-			flow+=int64(nw)
+			flow += int64(nw)
 		}
 	}
 	return flow
 }
-func CopyBufferUpdateFlow(dst net.Conn, src net.Conn,conn net.Conn,tid int64,nid int64,isUp bool) {
+func CopyBufferUpdateFlow(dst net.Conn, src net.Conn, conn net.Conn, tid int64, nid int64, isUp bool) {
 	var flow int64
 	defer func() {
 		dst.Close()
 		src.Close()
-		if flow>0{
-			SendStruct(conn,UpdateFlow,"",FlowType{IsUp: isUp,TunnelId: tid,NodeId: nid,Flow: flow})
+		if flow > 0 {
+			SendStruct(conn, UpdateFlow, "", FlowType{IsUp: isUp, TunnelId: tid, NodeId: nid, Flow: flow})
 		}
 		if err := recover(); err != nil {
 			log.Println("Panic info is: ", err)
@@ -198,16 +198,25 @@ func CopyBufferUpdateFlow(dst net.Conn, src net.Conn,conn net.Conn,tid int64,nid
 		}
 		if nr > 0 {
 			nw, we := dst.Write(buf[0:nr])
-			if nw>0 {
-				flow+=int64(nw)
-				if flow>1024*1024*10{
-					SendStruct(conn,UpdateFlow,"",FlowType{IsUp: isUp,TunnelId: tid,NodeId: nid,Flow: flow})
-					flow=0
+			if nw > 0 {
+				flow += int64(nw)
+				if flow > 1024*1024*10 {
+					SendStruct(conn, UpdateFlow, "", FlowType{IsUp: isUp, TunnelId: tid, NodeId: nid, Flow: flow})
+					flow = 0
 				}
 			}
-			if nr != nw||we!=nil{
+			if nr != nw || we != nil {
 				break
 			}
 		}
 	}
+	//int64s := make(chan int64)
+	//zerocopy.Transfer(dst,src,int64s)
+	//for i := range int64s {
+	//	flow+=i
+	//	if flow>1024*1024*10{
+	//		SendStruct(conn,UpdateFlow,"",FlowType{IsUp: isUp,TunnelId: tid,NodeId: nid,Flow: flow})
+	//		flow=0
+	//	}
+	//}
 }

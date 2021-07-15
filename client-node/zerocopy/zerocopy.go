@@ -7,7 +7,9 @@ package zerocopy
 
 import (
 	"io"
+	"log"
 	"os"
+	"runtime/debug"
 	"syscall"
 )
 
@@ -130,6 +132,42 @@ func (p *Pipe) Tee(w io.Writer) {
 // 	p.WriteTo(upstream)
 //
 // but in more compact form, and slightly more resource-efficient.
-func Transfer(dst io.Writer, src io.Reader, FlowChan chan int64) (int64, error) {
+func Transfer(dst io.WriteCloser, src io.ReadCloser, FlowChan chan int64) (int64, error) {
 	return transfer(dst, src, FlowChan)
+}
+func transferOther(dst io.WriteCloser, src io.ReadCloser, FlowChan chan int64) (int64, error) {
+	var flow, count int64
+	defer func() {
+		dst.Close()
+		src.Close()
+		if flow > 0 {
+			FlowChan <- flow
+		}
+		close(FlowChan)
+		if err := recover(); err != nil {
+			log.Println("Panic info is: ", err, string(debug.Stack()))
+		}
+	}()
+	buf := make([]byte, 1024*32)
+	for {
+		nr, er := src.Read(buf)
+		if er != nil {
+			break
+		}
+		if nr > 0 {
+			nw, we := dst.Write(buf[0:nr])
+			if nw > 0 {
+				flow += int64(nw)
+				count += int64(nw)
+				if flow > 1024*1024*10 {
+					FlowChan <- flow
+					flow = 0
+				}
+			}
+			if nr != nw || we != nil {
+				break
+			}
+		}
+	}
+	return count, nil
 }

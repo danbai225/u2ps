@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 	"u2ps/common"
+	"u2ps/zerocopy"
 )
 
 var (
@@ -254,50 +255,66 @@ func ControlNodeTask(conn net.Conn, id int64) {
 func TcpBridge(tConn net.Conn, nConn *smux.Stream, tid int64) {
 	if tConn != nil && nConn != nil {
 		go func() {
-			l := common.CopyBuffer(nConn, tConn)
-			if l > 0 {
-				common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: l})
+			ch := make(chan int64)
+			go zerocopy.Transfer(nConn, tConn, ch)
+			for i := range ch {
+				if i > 0 {
+					go common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: i})
+				}
 			}
 		}()
-		l := common.CopyBuffer(tConn, nConn)
-		if l > 0 {
-			common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: l})
+		ch := make(chan int64)
+		go zerocopy.Transfer(tConn, nConn, ch)
+		for i := range ch {
+			if i > 0 {
+				go common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: i})
+			}
 		}
 	}
 }
 func UdpBridge(tConn net.Conn, nConn *smux.Stream, tid int64) {
-	defer tConn.Close()
-	defer nConn.Close()
-	var flow int64
-	defer common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: flow})
+	//var flow int64
+	//defer common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: flow})
 	if tConn != nil && nConn != nil {
 		go func() {
-			defer tConn.Close()
-			defer nConn.Close()
-			var flow int64
-			defer common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: flow})
-			buf := make([]byte, 65507)
-			for {
-				nConn.SetDeadline(time.Now().Add(time.Second * 30))
-				n, err := nConn.Read(buf)
-				if err == nil {
-					l, _ := tConn.Write(buf[0:n])
-					flow += int64(l)
-				} else {
-					break
+			//var flow int64
+			//defer common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: flow})
+			//buf := make([]byte, 65507)
+			//for {
+			//	nConn.SetDeadline(time.Now().Add(time.Second * 30))
+			//	n, err := nConn.Read(buf)
+			//	if err == nil {
+			//		l, _ := tConn.Write(buf[0:n])
+			//		flow += int64(l)
+			//	} else {
+			//		break
+			//	}
+			//}
+			FlowChan := make(chan int64)
+			go zerocopy.Transfer(tConn, nConn, FlowChan)
+			for i := range FlowChan {
+				if i > 0 {
+					go common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: i})
 				}
 			}
 		}()
-		for {
-			buf := make([]byte, 65507)
-			for {
-				n, err := tConn.Read(buf)
-				if err == nil {
-					l, _ := nConn.Write(buf[0:n])
-					flow += int64(l)
-				} else {
-					break
-				}
+		//for {
+		//	buf := make([]byte, 65507)
+		//	for {
+		//		n, err := tConn.Read(buf)
+		//		if err == nil {
+		//			l, _ := nConn.Write(buf[0:n])
+		//			flow += int64(l)
+		//		} else {
+		//			break
+		//		}
+		//	}
+		//}
+		FlowChan := make(chan int64)
+		go zerocopy.Transfer(nConn, tConn, FlowChan)
+		for i := range FlowChan {
+			if i > 0 {
+				go common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: i})
 			}
 		}
 	}

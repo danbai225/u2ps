@@ -32,8 +32,8 @@ func (p *Pipe) writeTo(dst io.Writer) (int64, error) {
 	return io.Copy(dst, p.r)
 }
 
-func transfer(dst io.Writer, src io.Reader, FlowChan chan int64) (int64, error) {
-	return io.Copy(dst, src)
+func transfer(dst io.WriteCloser, src io.ReadCloser, FlowChan chan int64) (int64, error) {
+	return transferOther(dst, src, FlowChan)
 }
 
 func (p *Pipe) tee(w io.Writer) {

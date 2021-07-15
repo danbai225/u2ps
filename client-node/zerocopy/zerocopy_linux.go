@@ -119,12 +119,12 @@ Any changes to this package must retain these properties.
 */
 
 import (
+	"golang.org/x/sys/unix"
 	"io"
 	"log"
 	"os"
+	"runtime/debug"
 	"syscall"
-
-	"golang.org/x/sys/unix"
 )
 
 func (p *Pipe) bufferSize() (int, error) {
@@ -540,8 +540,7 @@ end:
 	return moved, nil
 }
 
-func transfer(dst io.Writer, src io.Reader, FlowChan chan int64) (int64, error) {
-	log.Println("0copy")
+func transfer(dst io.WriteCloser, src io.Reader, FlowChan chan int64) (int64, error) {
 	// If src is a limited reader, honor the limit.
 	var (
 		rd    io.Reader
@@ -556,20 +555,20 @@ func transfer(dst io.Writer, src io.Reader, FlowChan chan int64) (int64, error) 
 	}
 	rsc, ok := rd.(syscall.Conn)
 	if !ok {
-		return io.Copy(dst, src)
+		return transferOther(dst, src.(io.ReadCloser), FlowChan)
 	}
 	rrc, err := rsc.SyscallConn()
 	if err != nil {
-		return io.Copy(dst, src)
+		return transferOther(dst, src.(io.ReadCloser), FlowChan)
 	}
 
 	wsc, ok := dst.(syscall.Conn)
 	if !ok {
-		return io.Copy(dst, src)
+		return transferOther(dst, src.(io.ReadCloser), FlowChan)
 	}
 	wrc, err := wsc.SyscallConn()
 	if err != nil {
-		return io.Copy(dst, src)
+		return transferOther(dst, src.(io.ReadCloser), FlowChan)
 	}
 
 	// Now, we know that dst and src are two file descriptors
@@ -580,7 +579,7 @@ func transfer(dst io.Writer, src io.Reader, FlowChan chan int64) (int64, error) 
 	// is a pretty direct translation of.
 	p, err := NewPipe()
 	if err != nil {
-		return io.Copy(dst, src)
+		return transferOther(dst, src.(io.ReadCloser), FlowChan)
 	}
 
 	var moved int64 = 0
@@ -589,6 +588,16 @@ func transfer(dst io.Writer, src io.Reader, FlowChan chan int64) (int64, error) 
 			lr.N -= *v
 		}(&moved)
 	}
+	var flow int64
+	defer func() {
+		if flow > 0 {
+			FlowChan <- flow
+		}
+		close(FlowChan)
+		if err := recover(); err != nil {
+			log.Println("Panic info is: ", err, string(debug.Stack()))
+		}
+	}()
 	for limit > 0 {
 		max := maxSpliceSize
 		if int64(max) > limit {
@@ -597,7 +606,7 @@ func transfer(dst io.Writer, src io.Reader, FlowChan chan int64) (int64, error) 
 		inpipe, fallback, err := spliceDrain(p, rrc, max)
 		limit -= int64(inpipe)
 		if fallback {
-			return io.Copy(dst, src)
+			return transferOther(dst, src.(io.ReadCloser), FlowChan)
 		}
 		if inpipe == 0 && err == nil {
 			return moved, nil
@@ -619,9 +628,11 @@ func transfer(dst io.Writer, src io.Reader, FlowChan chan int64) (int64, error) 
 				return n1, err
 			}
 			n2, err := io.Copy(dst, src)
-			go func() {
-				FlowChan <- n2
-			}()
+			flow += n2
+			if flow > 1024*1024*10 {
+				FlowChan <- flow
+				flow = 0
+			}
 			return n1 + n2, err
 		}
 		if err != nil {

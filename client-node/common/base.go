@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"time"
+	"u2ps/zerocopy"
 )
 
 type Msg struct {
@@ -179,44 +180,42 @@ func CopyBuffer(dst net.Conn, src net.Conn) int64 {
 	return flow
 }
 func CopyBufferUpdateFlow(dst net.Conn, src net.Conn, conn net.Conn, tid int64, nid int64, isUp bool) {
-	var flow int64
-	defer func() {
-		dst.Close()
-		src.Close()
-		if flow > 0 {
-			SendStruct(conn, UpdateFlow, "", FlowType{IsUp: isUp, TunnelId: tid, NodeId: nid, Flow: flow})
-		}
-		if err := recover(); err != nil {
-			log.Println("Panic info is: ", err)
-		}
-	}()
-	buf := make([]byte, 1024*32)
-	for {
-		nr, er := src.Read(buf)
-		if er != nil {
-			break
-		}
-		if nr > 0 {
-			nw, we := dst.Write(buf[0:nr])
-			if nw > 0 {
-				flow += int64(nw)
-				if flow > 1024*1024*10 {
-					SendStruct(conn, UpdateFlow, "", FlowType{IsUp: isUp, TunnelId: tid, NodeId: nid, Flow: flow})
-					flow = 0
-				}
-			}
-			if nr != nw || we != nil {
-				break
-			}
-		}
-	}
-	//int64s := make(chan int64)
-	//zerocopy.Transfer(dst,src,int64s)
-	//for i := range int64s {
-	//	flow+=i
-	//	if flow>1024*1024*10{
-	//		SendStruct(conn,UpdateFlow,"",FlowType{IsUp: isUp,TunnelId: tid,NodeId: nid,Flow: flow})
-	//		flow=0
+	//var flow int64
+	//defer func() {
+	//	dst.Close()
+	//	src.Close()
+	//	if flow > 0 {
+	//		SendStruct(conn, UpdateFlow, "", FlowType{IsUp: isUp, TunnelId: tid, NodeId: nid, Flow: flow})
+	//	}
+	//	if err := recover(); err != nil {
+	//		log.Println("Panic info is: ", err)
+	//	}
+	//}()
+	//buf := make([]byte, 1024*32)
+	//for {
+	//	nr, er := src.Read(buf)
+	//	if er != nil {
+	//		break
+	//	}
+	//	if nr > 0 {
+	//		nw, we := dst.Write(buf[0:nr])
+	//		if nw > 0 {
+	//			flow += int64(nw)
+	//			if flow > 1024*1024*10 {
+	//				SendStruct(conn, UpdateFlow, "", FlowType{IsUp: isUp, TunnelId: tid, NodeId: nid, Flow: flow})
+	//				flow = 0
+	//			}
+	//		}
+	//		if nr != nw || we != nil {
+	//			break
+	//		}
 	//	}
 	//}
+	int64s := make(chan int64)
+	go zerocopy.Transfer(dst, src, int64s)
+	for i := range int64s {
+		if i > 0 {
+			go SendStruct(conn, UpdateFlow, "", FlowType{IsUp: isUp, TunnelId: tid, NodeId: nid, Flow: i})
+		}
+	}
 }

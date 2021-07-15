@@ -17,6 +17,7 @@ import (
 	"time"
 	"u2ps/common"
 	"u2ps/utils"
+	"u2ps/zerocopy"
 )
 
 var (
@@ -527,33 +528,40 @@ func TcpBridge(connP net.Conn, connC *smux.Stream, tid int64, nid int64) {
 	}
 }
 func UdpBridge(connP *net.UDPConn, connC *smux.Stream, addr *net.UDPAddr, tid int64, nid int64) {
-	var flow int64
-	defer func() {
-		if flow > 0 {
-			go common.SendStruct(conn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: nid, Flow: flow})
-		}
-		if err := recover(); err != nil {
-			log.Println("Panic info is: ", err)
-		}
-	}()
-	if connP != nil && connC != nil {
-		buf := make([]byte, 65507)
-		for {
-			n, err := connC.Read(buf)
-			if err == nil {
-				l, _ := connP.WriteToUDP(buf[0:n], addr)
-				if l > 0 {
-					flow += int64(l)
-					if flow > 1024*1024*10 {
-						go common.SendStruct(conn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: nid, Flow: flow})
-						flow = 0
-					}
-				}
-			} else {
-				connC.Close()
-				delete(UdpMap, addr.String())
-				break
-			}
+	//var flow int64
+	//defer func() {
+	//	if flow > 0 {
+	//		go common.SendStruct(conn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: nid, Flow: flow})
+	//	}
+	//	if err := recover(); err != nil {
+	//		log.Println("Panic info is: ", err,string(debug.Stack()))
+	//	}
+	//}()
+	//if connP != nil && connC != nil {
+	//	buf := make([]byte, 65507)
+	//	for {
+	//		n, err := connC.Read(buf)
+	//		if err == nil {
+	//			l, _ := connP.WriteToUDP(buf[0:n], addr)
+	//			if l > 0 {
+	//				flow += int64(l)
+	//				if flow > 1024*1024*10 {
+	//					go common.SendStruct(conn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: nid, Flow: flow})
+	//					flow = 0
+	//				}
+	//			}
+	//		} else {
+	//			connC.Close()
+	//			delete(UdpMap, addr.String())
+	//			break
+	//		}
+	//	}
+	//}
+	FlowChan := make(chan int64)
+	go zerocopy.Transfer(connP, connC, FlowChan)
+	for i := range FlowChan {
+		if i > 0 {
+			go common.SendStruct(conn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: nid, Flow: i})
 		}
 	}
 }

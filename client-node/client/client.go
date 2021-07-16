@@ -17,12 +17,13 @@ import (
 
 var (
 	ri                 = 0
-	sConn              net.Conn
+	SConn              net.Conn
 	Client             common.Client
 	NodeControlConnMap = make(map[int64]net.Conn)
 	TunnelMap          = make(map[int64]common.Tunnel)
 	NodeMap            = make(map[int64]common.Node)
 	Socks5Map          = make(map[int64]*socks5.Server)
+	IsGui              bool
 )
 
 func Conn() {
@@ -32,7 +33,7 @@ func Conn() {
 	}
 	for ri < common.MaxRi {
 		var err error
-		sConn, err = net.Dial("tcp", common.HostInfo)
+		SConn, err = net.Dial("tcp", common.HostInfo)
 		if err != nil {
 			log.Printf("连接" + common.HostInfo + "失败")
 		} else {
@@ -46,11 +47,24 @@ func Conn() {
 	}
 	log.Printf("停止尝试,退出服务")
 }
+func Exit() {
+	Client = common.Client{}
+	ri = common.MaxRi + 1
+	if SConn != nil {
+		SConn.Close()
+	}
+	for _, conn := range NodeControlConnMap {
+		conn.Close()
+	}
+	for _, server := range Socks5Map {
+		server.Shutdown()
+	}
+}
 func doTask() {
 	//认证
 	authentication()
 	for {
-		msg, err := bufio.NewReader(sConn).ReadString('\n')
+		msg, err := bufio.NewReader(SConn).ReadString('\n')
 		if err != nil {
 			log.Printf("接收U2PS服务端数据出错")
 			break
@@ -64,8 +78,10 @@ func doTask() {
 				//连接验证错误
 				case string(common.AuthenticationResultErr):
 					log.Printf(m.Msg)
-					sConn.Close()
-					os.Exit(1)
+					SConn.Close()
+					if !IsGui {
+						os.Exit(1)
+					}
 				case string(common.TypeAuthenticationResultOk):
 					//客户端连接返回节点和隧道
 					if m.Data != nil && len(NodeMap) == 0 {
@@ -78,7 +94,7 @@ func doTask() {
 						common.ToStruct(&rs, m.Data)
 						if rs.Versions != common.Versions {
 							log.Printf("当前版本不是最新版本,请到官网下载最新版本! https://u2ps.com")
-							sConn.Close()
+							SConn.Close()
 							os.Exit(1)
 						}
 						Client = rs.Client
@@ -89,7 +105,7 @@ func doTask() {
 								go Socks5(t)
 							}
 						}
-						go common.SendStruct(sConn, common.Heartbeat, "Client", Client.ID)
+						go common.SendStruct(SConn, common.Heartbeat, "Client", Client.ID)
 					}
 				case string(common.UpdateTunnel):
 					var tunnel common.Tunnel
@@ -137,7 +153,7 @@ func doTask() {
 					go addNodeConn(nodes)
 				case string(common.Heartbeat):
 					//接收到心跳正常.
-					go common.SendStruct(sConn, common.Heartbeat, "Client", Client.ID)
+					go common.SendStruct(SConn, common.Heartbeat, "Client", Client.ID)
 
 				default:
 					log.Println(msg)
@@ -165,7 +181,7 @@ func Socks5(tunnel common.Tunnel) {
 
 //认证
 func authentication() {
-	common.SendStructTypeAndData(sConn, common.AuthenticationClient, common.Key)
+	common.SendStructTypeAndData(SConn, common.AuthenticationClient, common.Key)
 }
 
 func addNodeConn(ns []common.Node) {
@@ -259,7 +275,7 @@ func TcpBridge(tConn net.Conn, nConn *smux.Stream, tid int64) {
 			go zerocopy.Transfer(nConn, tConn, ch)
 			for i := range ch {
 				if i > 0 {
-					go common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: i})
+					go common.SendStruct(SConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: i})
 				}
 			}
 		}()
@@ -267,18 +283,18 @@ func TcpBridge(tConn net.Conn, nConn *smux.Stream, tid int64) {
 		go zerocopy.Transfer(tConn, nConn, ch)
 		for i := range ch {
 			if i > 0 {
-				go common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: i})
+				go common.SendStruct(SConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: i})
 			}
 		}
 	}
 }
 func UdpBridge(tConn net.Conn, nConn *smux.Stream, tid int64) {
 	//var flow int64
-	//defer common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: flow})
+	//defer common.SendStruct(SConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: flow})
 	if tConn != nil && nConn != nil {
 		go func() {
 			//var flow int64
-			//defer common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: flow})
+			//defer common.SendStruct(SConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: flow})
 			//buf := make([]byte, 65507)
 			//for {
 			//	nConn.SetDeadline(time.Now().Add(time.Second * 30))
@@ -294,7 +310,7 @@ func UdpBridge(tConn net.Conn, nConn *smux.Stream, tid int64) {
 			go zerocopy.Transfer(tConn, nConn, FlowChan)
 			for i := range FlowChan {
 				if i > 0 {
-					go common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: i})
+					go common.SendStruct(SConn, common.UpdateFlow, "", common.FlowType{IsUp: false, TunnelId: tid, NodeId: -1, Flow: i})
 				}
 			}
 		}()
@@ -314,7 +330,7 @@ func UdpBridge(tConn net.Conn, nConn *smux.Stream, tid int64) {
 		go zerocopy.Transfer(nConn, tConn, FlowChan)
 		for i := range FlowChan {
 			if i > 0 {
-				go common.SendStruct(sConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: i})
+				go common.SendStruct(SConn, common.UpdateFlow, "", common.FlowType{IsUp: true, TunnelId: tid, NodeId: -1, Flow: i})
 			}
 		}
 	}

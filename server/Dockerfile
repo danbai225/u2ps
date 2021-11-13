@@ -1,5 +1,5 @@
 FROM openjdk:8-jre-alpine
-LABEL maintainer="db225@qq.com"
+LABEL maintainer="danbai@88.com"
 
 RUN echo "Asia/Shanghai" > /etc/timezone
 ADD u2ps-server.jar /bin/app/u2ps-server.jar

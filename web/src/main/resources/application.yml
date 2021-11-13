@@ -1,0 +1,56 @@
+server:
+  port: 2252
+  tomcat.uri-encoding: UTF-8
+spring:
+  thymeleaf:
+    cache: false
+  mail:
+    host: smtpdm.aliyun.com
+    username: emailUser
+    password: emailPass
+    default-encoding: utf-8
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  datasource:
+    druid:
+      url: jdbc:mysql://mysqlServer:3306/u2ps?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2b8
+      username: mysqlUser
+      password: mysqlPass
+      initial-size: 1
+      min-idle: 3
+      max-active: 5
+      test-on-borrow: true
+      driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    database: 6
+    host: redisServer
+    port: 5070
+    timeout: 3000
+    password: RedisPass
+mybatis:
+  type-aliases-package: tk.mybatis.springboot.model
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    cache-enabled: true
+logging:
+  file:
+    path: "./logs/"
+    name: "./logs/u2ps.log"
+  file.max-size: 100MB
+u2ps:
+  domain: "https://u2ps.com"
+  mail-sender: "u2ps@p00q.cn"
+  askNode:
+    num: 30
+    interval: 100
+dubbo:
+  application:
+    name: u2ps-web
+  protocol:
+    name: dubbo #通信协议
+    port: -1 #端口自增
+  registry:
+    address: nacos://nacosServer:8848 #nacos服务器地址
+  scan:
+    base-packages: cn.p00q.u2ps.service.impl #扫描服务包路径
